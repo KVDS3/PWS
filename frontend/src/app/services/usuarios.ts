@@ -12,9 +12,10 @@ export class UsuarioService {
   constructor(private http: HttpClient) {}
 
   // Listar usuarios
-  getUsuarios(): Observable<Usuario[]> {
-    return this.http.get<Usuario[]>(`${this.apiUrl}/usuarios`);
-  }
+ getUsuarios(): Observable<Usuario[]> {
+  return this.http.get<Usuario[]>(`${this.apiUrl}/usuarios`);
+}
+
 
   // Crear usuario
   addUsuario(usuario: Usuario): Observable<Usuario> {
