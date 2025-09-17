@@ -1,0 +1,31 @@
+<!-- Lista de usuarios -->
+<table border="1" cellpadding="5">
+  <tr>
+    <th>ID</th>
+    <th>Nombre</th>
+    <th>Email</th>
+    <th>Rol</th>
+  </tr>
+  <tr *ngFor="let usuario of usuarios">
+    <td>{{ usuario.id }}</td>
+    <td>{{ usuario.nombre }}</td>
+    <td>{{ usuario.email }}</td>
+    <td>{{ usuario.rol }}</td>
+  </tr>
+</table>
+
+<hr>
+
+<!-- Formulario para crear usuario -->
+<h3>Crear Usuario</h3>
+<form (ngSubmit)="crearUsuario()">
+  <input type="text" placeholder="Nombre" [(ngModel)]="nuevoUsuario.nombre" name="nombre" required>
+  <input type="email" placeholder="Email" [(ngModel)]="nuevoUsuario.email" name="email" required>
+  <input type="password" placeholder="Contraseña" [(ngModel)]="nuevoUsuario.password" name="password" required>
+  <select [(ngModel)]="nuevoUsuario.rol" name="rol">
+    <option value="admin">Admin</option>
+    <option value="editor">Editor</option>
+    <option value="lector">Lector</option>
+  </select>
+  <button type="submit">Registrar</button>
+</form>
