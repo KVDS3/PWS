@@ -1,0 +1,357 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+body {
+    background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 20px;
+}
+
+.auth-container {
+    background-color: white;
+    border-radius: 12px;
+    box-shadow: 0 15px 30px rgba(0, 0, 0, 0.1);
+    width: 100%;
+    max-width: 420px;
+    overflow: hidden;
+}
+
+/* Nuevos estilos para el flujo con enlaces */
+.auth-form-container {
+    padding: 25px;
+}
+
+.auth-header {
+    background: linear-gradient(to right, #4361ee, #3a0ca3);
+    color: white;
+    padding: 25px;
+    text-align: center;
+    margin: -25px -25px 25px -25px;
+}
+
+.auth-header h1 {
+    font-size: 24px;
+    margin-bottom: 10px;
+    font-weight: 600;
+}
+
+.auth-header p {
+    font-size: 14px;
+    opacity: 0.9;
+}
+
+.auth-form {
+    padding: 0;
+}
+
+.auth-links {
+    text-align: center;
+    margin-top: 20px;
+    padding-top: 20px;
+    border-top: 1px solid #e9ecef;
+}
+
+.auth-links p {
+    margin: 10px 0;
+    color: #6c757d;
+    font-size: 14px;
+}
+
+.auth-links a {
+    color: #4361ee;
+    text-decoration: none;
+    font-weight: 500;
+    cursor: pointer;
+}
+
+.auth-links a:hover {
+    text-decoration: underline;
+}
+
+.form-group {
+    margin-bottom: 20px;
+    position: relative;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: 500;
+    color: #212529;
+}
+
+.form-control {
+    width: 100%;
+    padding: 12px 15px;
+    border: 1px solid #e9ecef;
+    border-radius: 6px;
+    font-size: 15px;
+    transition: all 0.3s ease;
+}
+
+.form-control:focus {
+    outline: none;
+    border-color: #4361ee;
+    box-shadow: 0 0 0 3px rgba(67, 97, 238, 0.2);
+}
+
+.input-icon {
+    position: relative;
+}
+
+.input-icon i {
+    position: absolute;
+    left: 15px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #6c757d;
+}
+
+.input-icon input {
+    padding-left: 45px;
+}
+
+.btn {
+    display: block;
+    width: 100%;
+    padding: 12px;
+    border: none;
+    border-radius: 6px;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.btn-primary {
+    background-color: #4361ee;
+    color: white;
+}
+
+.btn-primary:hover {
+    background-color: #3a0ca3;
+}
+
+.btn-success {
+    background-color: #38b000;
+    color: white;
+}
+
+.btn-success:hover {
+    background-color: #2d9200;
+}
+
+.auth-footer {
+    text-align: center;
+    padding: 15px;
+    background-color: #e9ecef;
+    font-size: 14px;
+}
+
+.auth-footer a {
+    color: #4361ee;
+    text-decoration: none;
+    font-weight: 500;
+}
+
+.auth-footer a:hover {
+    text-decoration: underline;
+}
+
+.error-message {
+    display: block;
+    color: #f94144;
+    font-size: 12px;
+    margin-top: 5px;
+    margin-bottom: 15px;
+}
+
+.form-control.error {
+    border-color: #f94144;
+    background-color: #fff5f5;
+}
+
+/* Estilos para verificación */
+.verification-info {
+    text-align: center;
+    margin-bottom: 20px;
+}
+
+.email-highlight {
+    font-weight: bold;
+    color: #4361ee;
+    font-size: 16px;
+    margin-top: 5px;
+}
+
+.resend-otp {
+    text-align: center;
+    margin-bottom: 20px;
+    font-size: 14px;
+}
+
+.resend-otp a {
+    color: #4361ee;
+    text-decoration: none;
+    font-weight: 500;
+}
+
+.resend-otp a:hover {
+    text-decoration: underline;
+}
+
+/* Modal de éxito */
+.modal-backdrop {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+    animation: fadeIn 0.3s ease;
+}
+
+.modal-content {
+    background: white;
+    border-radius: 12px;
+    width: 90%;
+    max-width: 400px;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+    overflow: hidden;
+    animation: slideIn 0.3s ease;
+}
+
+.modal-header {
+    background: linear-gradient(to right, #38b000, #2d9200);
+    color: white;
+    padding: 20px;
+    text-align: center;
+}
+
+.modal-header i {
+    font-size: 48px;
+    margin-bottom: 10px;
+    display: block;
+}
+
+.modal-header h2 {
+    margin: 0;
+    font-size: 24px;
+    font-weight: 600;
+}
+
+.modal-body {
+    padding: 25px;
+    text-align: center;
+}
+
+.modal-body p {
+    margin: 0;
+    color: #495057;
+    line-height: 1.5;
+    font-size: 16px;
+}
+
+.modal-footer {
+    padding: 15px 25px 25px;
+    text-align: center;
+}
+
+.modal-footer .btn {
+    max-width: 120px;
+}
+
+/* Animaciones */
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+@keyframes slideIn {
+    from { 
+        opacity: 0;
+        transform: translateY(-20px) scale(0.95);
+    }
+    to { 
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+/* Estados de carga */
+.loading {
+    opacity: 0.7;
+    pointer-events: none;
+}
+
+.btn:disabled {
+    background-color: #6c757d;
+    cursor: not-allowed;
+}
+
+.spinner {
+    display: inline-block;
+    width: 20px;
+    height: 20px;
+    border: 3px solid rgba(255,255,255,.3);
+    border-radius: 50%;
+    border-top-color: #fff;
+    animation: spin 1s ease-in-out infinite;
+}
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+
+/* Responsive */
+@media (max-width: 480px) {
+    .auth-container {
+        border-radius: 0;
+    }
+    
+    .auth-form-container {
+        padding: 20px;
+    }
+    
+    .auth-header {
+        padding: 20px;
+        margin: -20px -20px 20px -20px;
+    }
+    
+    .auth-links {
+        margin-top: 15px;
+        padding-top: 15px;
+    }
+    
+    .modal-content {
+        width: 95%;
+        margin: 10px;
+    }
+    
+    .modal-header {
+        padding: 15px;
+    }
+    
+    .modal-header i {
+        font-size: 36px;
+    }
+    
+    .modal-header h2 {
+        font-size: 20px;
+    }
+    
+    .modal-body {
+        padding: 20px;
+    }
+}
