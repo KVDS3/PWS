@@ -3,7 +3,7 @@
     const swaggerUi = require('swagger-ui-express');
     const YAML = require('yamljs');
     const usuariosRoutes = require('./routes/usuarios');
-    const productosRoutes = require('./routes/productos');
+    const productosRoutes = require('./routes/productos2');
 
     const app = express();
     const swaggerDocument = YAML.load('./swagger/swagger.yaml');

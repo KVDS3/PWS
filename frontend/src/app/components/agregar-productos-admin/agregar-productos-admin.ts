@@ -1,8 +1,8 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, FormGroup } from '@angular/forms';
-import { ProductoService } from '../../services/producto';
-import { Producto } from '../../models/producto';
+import { ProductoService } from '../../services/producto2';
+import { Producto } from '../../models/producto2';
 
 @Component({
   selector: 'app-agregar-productos-admin',
