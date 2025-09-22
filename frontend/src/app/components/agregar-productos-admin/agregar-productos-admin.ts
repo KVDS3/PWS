@@ -1,8 +1,8 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { ReactiveFormsModule, FormBuilder, FormGroup } from '@angular/forms';
-import { ProductoService } from '../../services/producto2';
-import { Producto } from '../../models/producto2';
+import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
+import { ProductoService } from '../../services/producto2';  // ✅ Nombre correcto del servicio
+import { Producto } from '../../models/producto2';           // ✅ Modelo correcto
 
 @Component({
   selector: 'app-agregar-productos-admin',
@@ -13,57 +13,66 @@ import { Producto } from '../../models/producto2';
 })
 export class AgregarProductosAdmin implements OnInit {
   productos: Producto[] = [];
-  productoForm: FormGroup;
+  productoForm!: FormGroup;
+  mostrarModal = false;
 
-  constructor(private productoService: ProductoService, private fb: FormBuilder) {
+  constructor(
+    private fb: FormBuilder,
+    private productoService: ProductoService
+  ) {}
+
+  ngOnInit(): void {
     this.productoForm = this.fb.group({
-      nombre: [''],
+      nombre: ['', Validators.required],
       descripcion: [''],
-      precio: [''],
-      stock: ['']
+      precio: [0, [Validators.required, Validators.min(0)]],
+      stock: [0, [Validators.required, Validators.min(0)]]
     });
+
+    // 🚨 Traer productos al iniciar
+    this.obtenerProductos();
   }
 
-  ngOnInit() {
-    this.cargarProductos();
-  }
-
-  cargarProductos() {
+  obtenerProductos(): void {
     this.productoService.obtenerProductos().subscribe({
-      next: data => this.productos = data,
-      error: err => console.error(err)
-    });
-  }
-
-  agregarProducto() {
-    if (!this.productoForm.valid) return;
-
-    const producto: Producto = this.productoForm.value;
-
-    this.productoService.agregarProducto(producto).subscribe({
-      next: data => {
-        this.productos.unshift(data);
-        this.productoForm.reset();
-        this.mostrarModal();
+      next: (data) => {
+        this.productos = data;
       },
-      error: err => console.error(err)
+      error: (err) => {
+        console.error('Error al obtener productos', err);
+      }
     });
   }
 
-  eliminarProducto(id: number) {
+  agregarProducto(): void {
+    if (this.productoForm.valid) {
+      const nuevoProducto: Producto = this.productoForm.value;
+
+      this.productoService.agregarProducto(nuevoProducto).subscribe({
+        next: (productoGuardado) => {
+          this.productos.push(productoGuardado);
+          this.productoForm.reset();
+          this.mostrarModal = true; // ✅ Abre modal de éxito
+        },
+        error: (err) => {
+          console.error('Error al agregar producto', err);
+        }
+      });
+    }
+  }
+
+  eliminarProducto(id: number): void {
     this.productoService.eliminarProducto(id).subscribe({
-      next: () => this.productos = this.productos.filter(p => p.id !== id),
-      error: err => console.error(err)
+      next: () => {
+        this.productos = this.productos.filter(p => p.id !== id);
+      },
+      error: (err) => {
+        console.error('Error al eliminar producto', err);
+      }
     });
   }
 
-  mostrarModal() {
-    const modal = document.querySelector('.modal-backdrop') as HTMLElement;
-    if (modal) modal.style.display = 'flex';
-  }
-
-  cerrarModal() {
-    const modal = document.querySelector('.modal-backdrop') as HTMLElement;
-    if (modal) modal.style.display = 'none';
+  cerrarModal(): void {
+    this.mostrarModal = false;
   }
 }

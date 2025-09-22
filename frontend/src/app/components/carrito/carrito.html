@@ -1,34 +1,47 @@
-<div class="carrito-container">
-  <h1>🛒 Carrito de Compras</h1>
+<div class="carrito-wrapper">
+  <div class="carrito-cuadro">
+    <h1>🛒 Carrito de Compras</h1>
 
-  <div *ngIf="carrito.length === 0" class="carrito-vacio">
-    <p>Tu carrito está vacío.</p>
-  </div>
-
-  <div *ngFor="let item of carrito" class="carrito-item">
-    <div class="item-info">
-      <h3>{{ item.nombre }}</h3>
-      <p>{{ item.descripcion }}</p>
-      <p>Precio: ${{ item.precio }}</p>
+    <div *ngIf="carrito.length===0" class="carrito-vacio">
+      <p>Tu carrito está vacío.</p>
     </div>
 
-    <div class="item-controls">
-      <button (click)="disminuirCantidad(item)">➖</button>
-      <span>{{ item.cantidad }}</span>
-      <button (click)="aumentarCantidad(item)">➕</button>
+    <div *ngFor="let item of carrito" class="carrito-item">
+      <div class="item-info">
+        <h3>{{item.nombre}}</h3>
+        <p>{{item.descripcion}}</p>
+        <p>Precio: ${{item.precio}}</p>
+      </div>
+
+      <div class="item-controls">
+        <button (click)="disminuirCantidad(item)">-</button>
+        <span>{{item.cantidad}}</span>
+        <button (click)="aumentarCantidad(item)">+</button>
+      </div>
+
+      <div class="item-total"><strong>Total: ${{item.precio*item.cantidad}}</strong></div>
+
+      <button class="eliminar-btn" (mouseenter)="hoverDel=true" (mouseleave)="hoverDel=false"
+              [style.backgroundColor]="hoverDel?'#c62828':'#e53935'" (click)="eliminarProducto(item)">
+        Eliminar
+      </button>
     </div>
 
-    <div class="item-total">
-      <strong>Total: ${{ item.precio * item.cantidad }}</strong>
+    <hr>
+
+    <div class="carrito-total" *ngIf="carrito.length>0 && !mostrarPago">
+      <h2>Total a pagar: ${{total}}</h2>
+      <button class="pagar-btn" (mouseenter)="hoverPay=true" (mouseleave)="hoverPay=false"
+              [style.backgroundColor]="hoverPay?'#43a047':'#4caf50'" (click)="iniciarPago()">
+        Pagar carrito
+      </button>
     </div>
 
-    <button class="eliminar-btn" (click)="eliminarProducto(item)">❌ Eliminar</button>
-  </div>
-
-  <hr>
-
-  <div class="carrito-total">
-    <h2>Total a pagar: ${{ total }}</h2>
-    <button (click)="pagar()">Pagar carrito</button>
+    <div *ngIf="mostrarPago" class="form-pago">
+      <h2>Ingresa los datos de tu tarjeta</h2>
+      <div id="card-element" class="card-element"></div>
+      <button class="pagar-btn" (click)="procesarPago()">Confirmar pago</button>
+      <button class="cancel-btn" (click)="mostrarPago=false">Cancelar</button>
+    </div>
   </div>
 </div>

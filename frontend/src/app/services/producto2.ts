@@ -7,7 +7,7 @@ import { Producto } from '../models/producto2';
   providedIn: 'root'
 })
 export class ProductoService {
-  private baseUrl = 'http://localhost:3000/api/productos';
+  private baseUrl = 'http://localhost:3000/api/productos2';
 
   constructor(private http: HttpClient) {}
 

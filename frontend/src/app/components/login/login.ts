@@ -71,39 +71,41 @@ export class Login implements OnDestroy, AfterViewInit {
   }
 
   handleGoogleResponse(response: any) {
-  const googleToken = response.credential;
+    const googleToken = response.credential;
 
-  this.usuarioService.loginWithGoogle(googleToken).subscribe({
-    next: (res) => {
-      if (res?.ok && res.usuario) {
-        localStorage.setItem('usuario', JSON.stringify(res.usuario));
-        localStorage.setItem('token', res.token); // <-- aquí guardas el JWT
-        console.log('JWT token de Google:', res.token); // opcional para debug
-                this.decodeToken(res.token); // <--- decodifica y muestra los datos en consola
-
-        this.router.navigate(['']);
-      } else {
-        this.error = 'Error al iniciar con Google';
+    this.usuarioService.loginWithGoogle(googleToken).subscribe({
+      next: (res) => {
+        if (res?.ok && res.usuario) {
+          localStorage.setItem('usuario', JSON.stringify(res.usuario));
+          localStorage.setItem('token', res.token); // <-- JWT
+          console.log('JWT token de Google:', res.token);
+          this.decodeToken(res.token);
+          
+          // Redirigir según rol
+          this.redirigirPorRol(res.usuario);
+        } else {
+          this.error = 'Error al iniciar con Google';
+        }
+        this.cdRef.detectChanges();
+      },
+      error: (err) => {
+        this.error = err.error?.error || 'Error al iniciar con Google';
+        this.cdRef.detectChanges();
       }
-      this.cdRef.detectChanges();
-    },
-    error: (err) => {
-      this.error = err.error?.error || 'Error al iniciar con Google';
-      this.cdRef.detectChanges();
-    }
-  });
-}
-decodeToken(token: string) {
-  try {
-    const payload = token.split('.')[1]; // el payload está en la segunda parte
-    const decoded = JSON.parse(atob(payload));
-    console.log('Datos dentro del token:', decoded);
-    return decoded;
-  } catch (err) {
-    console.error('Error decodificando token:', err);
-    return null;
+    });
   }
-}
+
+  decodeToken(token: string) {
+    try {
+      const payload = token.split('.')[1];
+      const decoded = JSON.parse(atob(payload));
+      console.log('Datos dentro del token:', decoded);
+      return decoded;
+    } catch (err) {
+      console.error('Error decodificando token:', err);
+      return null;
+    }
+  }
 
   ngOnDestroy(): void {
     this.subscriptions.unsubscribe();
@@ -117,37 +119,39 @@ decodeToken(token: string) {
   }
 
   onSubmit(): void {
-  if (!this.email || !this.password) {
-    this.error = 'Debes ingresar correo y contraseña';
-    return;
-  }
-
-  this.isLoading = true;
-  this.error = '';
-
-  const sub = this.usuarioService.loginUsuario(this.email, this.password).subscribe({
-    next: (res) => {
-      this.isLoading = false;
-      if (res?.ok && res.usuario) {
-        localStorage.setItem('usuario', JSON.stringify(res.usuario));
-        console.log('JWT token:', res.token);  // <-- Muestra el token en consola
-                this.decodeToken(res.token); // <--- decodifica y muestra los datos en consola
-
-        this.router.navigate(['']);
-      } else {
-        this.error = 'Credenciales inválidas';
-      }
-      this.cdRef.detectChanges();
-    },
-    error: (err) => {
-      this.isLoading = false;
-      this.error = err.error?.error || 'Error al iniciar sesión';
-      this.cdRef.detectChanges();
+    if (!this.email || !this.password) {
+      this.error = 'Debes ingresar correo y contraseña';
+      return;
     }
-  });
 
-  this.subscriptions.add(sub);
-}
+    this.isLoading = true;
+    this.error = '';
+
+    const sub = this.usuarioService.loginUsuario(this.email, this.password).subscribe({
+      next: (res) => {
+        this.isLoading = false;
+        if (res?.ok && res.usuario) {
+          localStorage.setItem('usuario', JSON.stringify(res.usuario));
+          localStorage.setItem('token', res.token); 
+          console.log('JWT token:', res.token);
+          this.decodeToken(res.token);
+
+          // Redirigir según rol
+          this.redirigirPorRol(res.usuario);
+        } else {
+          this.error = 'Credenciales inválidas';
+        }
+        this.cdRef.detectChanges();
+      },
+      error: (err) => {
+        this.isLoading = false;
+        this.error = err.error?.error || 'Error al iniciar sesión';
+        this.cdRef.detectChanges();
+      }
+    });
+
+    this.subscriptions.add(sub);
+  }
 
   // REGISTRO
   onRegister(): void {
@@ -330,5 +334,14 @@ decodeToken(token: string) {
     });
 
     this.subscriptions.add(sub);
+  }
+
+  // Función auxiliar para redirigir según rol
+  private redirigirPorRol(usuario: any) {
+    if (usuario.rol === 'admin') {
+      this.router.navigateByUrl('/agregarProducto');
+    } else {
+      this.router.navigateByUrl('/productos');
+    }
   }
 }

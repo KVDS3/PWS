@@ -1,26 +1,53 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { Router } from '@angular/router';
-import { HttpClient } from '@angular/common/http';
-import { loadStripe, Stripe } from '@stripe/stripe-js';
+import { HttpClientModule, HttpClient } from '@angular/common/http';
+import { loadStripe, Stripe, StripeCardElement } from '@stripe/stripe-js';
 
 @Component({
   selector: 'app-carrito',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, HttpClientModule],
   templateUrl: './carrito.html',
   styleUrls: ['./carrito.css']
 })
-export class Carrito implements OnInit {
+export class CarritoComponent implements OnInit {
   carrito: any[] = [];
-  total: number = 0;
-  stripe: Stripe | null = null;
+  total = 0;
+  mostrarPago = false;
 
-  constructor(private router: Router, private http: HttpClient) {}
+  hoverDel = false;
+  hoverPay = false;
 
-  async ngOnInit(): Promise<void> {
+  stripe!: Stripe | null;
+  card!: StripeCardElement;
+  usuario: any;
+
+  constructor(private http: HttpClient) {}
+
+  ngOnInit() {
     this.cargarCarrito();
-    this.stripe = await loadStripe('pk_test_51SA1WWD0tdqvUIOsQwf2oKHPWze5AfkjZAFuMB22MN4E2semrutxCNV1jTaCnmmSWNWPcgfAaf1z6gv7wu5aerln00kualI6v4'); // tu clave pública
+    const usuarioData = localStorage.getItem('usuario');
+    this.usuario = usuarioData ? JSON.parse(usuarioData) : null;
+  }
+
+  async iniciarPago() {
+    this.mostrarPago = true;
+
+    // Esperar renderizado
+    setTimeout(async () => {
+      if (!this.stripe) {
+        this.stripe = await loadStripe('pk_test_51SA1WWD0tdqvUIOsQwf2oKHPWze5AfkjZAFuMB22MN4E2semrutxCNV1jTaCnmmSWNWPcgfAaf1z6gv7wu5aerln00kualI6v4');
+      }
+
+      if (this.card) return; // ya inicializada
+
+      const cardDiv = document.getElementById('card-element');
+      if (!cardDiv) return;
+
+      const elements = this.stripe!.elements();
+      this.card = elements.create('card');
+      this.card.mount('#card-element');
+    }, 0);
   }
 
   cargarCarrito() {
@@ -29,82 +56,68 @@ export class Carrito implements OnInit {
     this.calcularTotal();
   }
 
-  aumentarCantidad(item: any) {
-    item.cantidad++;
-    this.guardarCarrito();
-  }
-
-  disminuirCantidad(item: any) {
-    if (item.cantidad > 1) {
-      item.cantidad--;
-    } else {
-      this.eliminarProducto(item);
-    }
-    this.guardarCarrito();
+  calcularTotal() {
+    this.total = this.carrito.reduce((acc, item) => acc + item.precio * item.cantidad, 0);
   }
 
   eliminarProducto(item: any) {
-    this.carrito = this.carrito.filter(p => p.id !== item.id);
-    this.guardarCarrito();
-  }
-
-  calcularTotal() {
-    this.total = this.carrito.reduce((acc, p) => acc + (p.precio * p.cantidad), 0);
-  }
-
-  guardarCarrito() {
+    const index = this.carrito.indexOf(item);
+    if (index > -1) this.carrito.splice(index, 1);
     localStorage.setItem('carrito', JSON.stringify(this.carrito));
     this.calcularTotal();
   }
 
-  irAResumen() {
-    this.router.navigate(['/resumen']);
+  disminuirCantidad(item: any) { 
+    if(item.cantidad>1) item.cantidad--; 
+    this.calcularTotal(); 
+  }
+  
+  aumentarCantidad(item: any) { 
+    item.cantidad++; 
+    this.calcularTotal(); 
   }
 
-  // 🔹 Método actualizado para pagar con Stripe.js
-  async pagar() {
-    if (!this.stripe) {
-      alert('Stripe no está inicializado');
-      return;
-    }
-
-    if (this.carrito.length === 0) {
-      alert('El carrito está vacío');
-      return;
-    }
+  async procesarPago() {
+    if (!this.carrito.length) return alert('Carrito vacío');
+    if (!this.usuario) return alert('Debes iniciar sesión');
 
     try {
-      // 1️⃣ Crear PaymentIntent en el backend
-      const payload = {
-        usuarioId: 1, // reemplazar con usuario real
-        carrito: this.carrito.map(item => ({
-          productoId: item.id,
-          cantidad: item.cantidad,
-          precio: item.precio
-        }))
-      };
+      // 1️⃣ Solicitar PaymentIntent al backend
+      const res: any = await this.http.post('http://localhost:3000/api/pagos', {
+        carrito: this.carrito,
+        usuarioId: this.usuario.id
+      }).toPromise();
 
-      const res: any = await this.http.post('http://localhost:3000/api/pagos', payload).toPromise();
       const clientSecret = res.clientSecret;
+      if (!clientSecret) return alert('Error al crear pago');
 
-      // 2️⃣ Confirmar pago con tarjeta de prueba
-      const { error, paymentIntent } = await this.stripe.confirmCardPayment(clientSecret, {
+      // 2️⃣ Confirmar pago con Stripe
+      const { error, paymentIntent } = await this.stripe!.confirmCardPayment(clientSecret, {
         payment_method: {
-          card: { token: 'tok_visa' } // para pruebas, usa Elements para producción
+          card: this.card,
+          billing_details: { name: this.usuario.nombre, email: this.usuario.email }
         }
       });
 
-      if (error) {
-        alert('❌ Error en el pago: ' + error.message);
-      } else if (paymentIntent && paymentIntent.status === 'succeeded') {
-        alert('✅ Pago completado con éxito');
+      if (error) return alert('❌ Pago fallido: ' + error.message);
+
+      if (paymentIntent?.status === 'succeeded') {
+        // 3️⃣ Notificar al backend para generar factura
+        await this.http.post('http://localhost:3000/api/pagos/confirmar', {
+          usuario: this.usuario,
+          carrito: this.carrito,
+          paymentIntentId: paymentIntent.id
+        }).toPromise();
+
+        alert('✅ Pago realizado y factura enviada');
         localStorage.removeItem('carrito');
         this.cargarCarrito();
+        this.mostrarPago = false;
       }
 
-    } catch (err: any) {
+    } catch (err) {
       console.error(err);
-      alert('❌ Error al procesar el pago');
+      alert('❌ Error procesando pago');
     }
   }
 }
