@@ -4,4 +4,5 @@ export interface Usuario {
   email: string;
   password: string;
   rol: 'admin' | 'editor' | 'lector';  // restringido a los valores válidos
+  
 }

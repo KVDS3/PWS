@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sistema de Autenticación</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="login.css">
+</head>
+<body>
+<div class="auth-container">
+  <!-- LOGIN -->
+  <div *ngIf="selectedTab === 'login'" class="auth-form-container">
+    <div class="auth-header">
+      <h1>Bienvenido de nuevo</h1>
+      <p>Ingresa a tu cuenta para acceder al sistema</p>
+    </div>
+
+    <form class="auth-form" (ngSubmit)="onSubmit()">
+      <div class="form-group">
+        <label for="login-email">Correo electrónico</label>
+        <div class="input-icon">
+          <i class="fas fa-envelope"></i>
+          <input type="email" class="form-control" id="login-email"
+                 [(ngModel)]="email" name="loginEmail" placeholder="tu@email.com" required>
+        </div>
+      </div>
+      <div class="form-group">
+        <label for="login-password">Contraseña</label>
+        <div class="input-icon">
+          <i class="fas fa-lock"></i>
+          <input type="password" class="form-control" id="login-password"
+                 [(ngModel)]="password" name="loginPassword" placeholder="Tu contraseña" required>
+        </div>
+      </div>
+
+      <div class="error-message" *ngIf="error">{{ error }}</div>
+      <button type="submit" class="btn btn-primary">Iniciar Sesión</button>
+    </form>
+
+    <!-- Google Sign-In -->
+    <div class="google-signin">
+      <div id="g_id_onload"
+           data-client_id="1023657360893-65p8bs4cd7jscntjspmfckb4hmnb8o6a.apps.googleusercontent.com"
+           data-callback="handleCredentialResponse">
+      </div>
+
+      <div id="g_id_signin" class="g_id_signin" data-type="standard"></div>
+    </div>
+
+    <div class="auth-links">
+      <p>¿No tienes cuenta? <a href="javascript:void(0)" (click)="selectTab('register')">Regístrate aquí</a></p>
+      <p>¿Olvidaste tu contraseña? <a href="javascript:void(0)" (click)="selectTab('recovery')">Recupérala aquí</a></p>
+    </div>
+  </div>
+  <!-- REGISTRO -->
+  <div *ngIf="selectedTab === 'register'" class="auth-form-container">
+    <div class="auth-header">
+      <h1>Crear Cuenta</h1>
+      <p>Completa tus datos para registrarte</p>
+    </div>
+
+    <div class="auth-form">
+      <div class="form-group">
+        <label for="register-name">Nombre completo</label>
+        <div class="input-icon">
+          <i class="fas fa-user"></i>
+          <input type="text" class="form-control" id="register-name"
+                 [(ngModel)]="nuevoUsuario.nombre" name="registerNombre"
+                 placeholder="Tu nombre completo" required>
+        </div>
+      </div>
+      <div class="form-group">
+        <label for="register-email">Correo electrónico</label>
+        <div class="input-icon">
+          <i class="fas fa-envelope"></i>
+          <input type="email" class="form-control" id="register-email"
+                 [(ngModel)]="nuevoUsuario.email" name="registerEmail"
+                 placeholder="tu@email.com" required>
+        </div>
+      </div>
+      <div class="form-group">
+        <label for="register-password">Contraseña</label>
+        <div class="input-icon">
+          <i class="fas fa-lock"></i>
+          <input type="password" class="form-control" id="register-password"
+                 [(ngModel)]="nuevoUsuario.password" name="registerPassword"
+                 placeholder="Crea una contraseña segura" required>
+        </div>
+      </div>
+      <div class="form-group">
+        <label for="register-confirm-password">Confirmar contraseña</label>
+        <div class="input-icon">
+          <i class="fas fa-lock"></i>
+          <input type="password" class="form-control" id="register-confirm-password"
+                 [(ngModel)]="confirmPassword" name="registerConfirmPassword"
+                 placeholder="Repite tu contraseña" required>
+        </div>
+      </div>
+      <div class="error-message" *ngIf="error">{{ error }}</div>
+      <button type="button" class="btn btn-primary" (click)="onRegister()">Enviar código</button>
+    </div>
+
+    <div class="auth-links">
+      <p>¿Ya tienes cuenta? <a href="javascript:void(0)" (click)="selectTab('login')">Inicia sesión aquí</a></p>
+    </div>
+  </div>
+
+  <!-- VERIFICAR REGISTRO -->
+  <div *ngIf="selectedTab === 'verify'" class="auth-form-container">
+    <div class="auth-header">
+      <h1>Verifica tu cuenta</h1>
+      <p>Ingresa el código que enviamos a tu correo</p>
+    </div>
+
+    <div class="auth-form">
+      <div class="form-group">
+        <label for="verification-code">Código de verificación</label>
+        <div class="input-icon">
+          <i class="fas fa-key"></i>
+          <input type="text" class="form-control" id="verification-code"
+                 [(ngModel)]="verificationCode" name="verificationCode"
+                 maxlength="6" placeholder="123456" required>
+        </div>
+      </div>
+
+      <div class="resend-otp" *ngIf="!countdownActive">
+        ¿No recibiste el código? <a href="javascript:void(0)" (click)="resendCode()">Reenviar código</a>
+      </div>
+      <div class="resend-otp" *ngIf="countdownActive">
+        Podrás solicitar un nuevo código en {{ countdown }} segundos
+      </div>
+
+      <div class="error-message" *ngIf="error">{{ error }}</div>
+      <button type="button" class="btn btn-success" (click)="onVerifyCode()">Verificar y Registrar</button>
+    </div>
+  </div>
+
+<!-- RECUPERAR -->
+<div *ngIf="selectedTab === 'recovery'" class="auth-form-container">
+  <div class="auth-header">
+    <h1>Recuperar acceso</h1>
+    <p>Ingresa tu correo para recibir un código y recuperar tu contraseña</p>
+  </div>
+
+  <div class="auth-form">
+    <div class="form-group">
+      <label for="recovery-email">Correo electrónico</label>
+      <div class="input-icon">
+        <i class="fas fa-envelope"></i>
+        <input type="email" class="form-control" id="recovery-email"
+               [(ngModel)]="recoveryEmail" name="recoveryEmail"
+               placeholder="tu@email.com" required>
+      </div>
+    </div>
+
+    <div class="error-message" *ngIf="error">{{ error }}</div>
+
+    <button type="button" class="btn btn-primary" (click)="onRecovery()">Enviar código</button>
+  </div>
+
+  <div class="auth-links">
+    <p>¿Recordaste tu contraseña? 
+      <a href="javascript:void(0)" (click)="selectTab('login')">Inicia sesión aquí</a>
+    </p>
+  </div>
+</div>
+
+
+  <!-- VERIFICAR RECUPERACIÓN -->
+ <!-- VERIFICAR RECUPERACIÓN -->
+<div *ngIf="selectedTab === 'recoveryVerify'" class="auth-form-container">
+  <div class="auth-header">
+    <h1>Verifica tu correo</h1>
+    <p>Ingresa el código que enviamos a {{ recoveryEmail }}</p>
+  </div>
+
+  <div class="auth-form">
+    <div class="form-group">
+      <label for="recovery-code">Código de verificación</label>
+      <div class="input-icon">
+        <i class="fas fa-key"></i>
+        <input type="text" class="form-control" id="recovery-code"
+               [(ngModel)]="recoveryCode" name="recoveryCode"
+               maxlength="6" placeholder="123456" required>
+      </div>
+    </div>
+
+    <!-- Reutilizamos el contador/reenvío -->
+    <div class="resend-otp" *ngIf="!countdownActive">
+      ¿No recibiste el código? 
+      <a href="javascript:void(0)" (click)="resendRecoveryCode()">Reenviar código</a>
+    </div>
+    <div class="resend-otp" *ngIf="countdownActive">
+      Podrás solicitar un nuevo código en {{ countdown }} segundos
+    </div>
+
+    <div class="error-message" *ngIf="error">{{ error }}</div>
+    <button type="button" class="btn btn-success" (click)="onVerifyRecoveryCode()">
+      Verificar y Recuperar
+    </button>
+  </div>
+</div>
+
+
+  <!-- REESTABLECER CONTRASEÑA -->
+  <div *ngIf="selectedTab === 'resetPassword'" class="auth-form-container">
+    <div class="auth-header">
+      <h1>Restablecer contraseña</h1>
+      <p>Escribe tu nueva contraseña</p>
+    </div>
+
+    <div class="auth-form">
+      <div class="form-group">
+        <label for="new-password">Nueva contraseña</label>
+        <div class="input-icon">
+          <i class="fas fa-lock"></i>
+          <input type="password" class="form-control" id="new-password"
+                 [(ngModel)]="newPassword" name="newPassword" required>
+        </div>
+      </div>
+      <div class="form-group">
+        <label for="confirm-new-password">Confirmar contraseña</label>
+        <div class="input-icon">
+          <i class="fas fa-lock"></i>
+          <input type="password" class="form-control" id="confirm-new-password"
+                 [(ngModel)]="confirmNewPassword" name="confirmNewPassword" required>
+        </div>
+      </div>
+      <div class="error-message" *ngIf="error">{{ error }}</div>
+      <button type="button" class="btn btn-primary" (click)="onResetPassword()">Cambiar contraseña</button>
+    </div>
+  </div>
+
+  <!-- MODAL DE ÉXITO -->
+  <div class="modal-backdrop" *ngIf="showSuccessModal" (click)="closeModal()">
+    <div class="modal-content" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <i class="fas fa-check-circle"></i>
+        <h2>¡Operación Exitosa!</h2>
+      </div>
+      <div class="modal-body">
+        <p>{{ successMessage }}</p>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-primary" (click)="closeModal()">Aceptar</button>
+      </div>
+    </div>
+  </div>
+</div>
+</body>
+</html>
