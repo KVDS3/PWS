@@ -3,6 +3,7 @@
     const swaggerUi = require('swagger-ui-express');
     const YAML = require('yamljs');
     const usuariosRoutes = require('./routes/usuarios');
+    const productosRoutes = require('./routes/productos');
 
     const app = express();
     const swaggerDocument = YAML.load('./swagger/swagger.yaml');
@@ -22,6 +23,7 @@
 
     // Rutas de Swagger
     app.use('/docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
+app.use('/api/productos', productosRoutes);
 
     // Ruta por defecto
     app.get('/', (req, res) => {

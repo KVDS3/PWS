@@ -455,3 +455,70 @@ body {
         margin-left: 0;
       }
     }
+
+    /* ESTILOS ESPECÍFICOS PARA LOS INPUTS DEL FORMULARIO */
+    .product-form input,
+    .product-form textarea {
+      width: 100%;
+      padding: 12px 15px 12px 45px;
+      border: 1px solid #e9ecef;
+      border-radius: 6px;
+      font-size: 15px;
+      transition: all 0.3s ease;
+      box-sizing: border-box;
+    }
+
+    .product-form input:focus,
+    .product-form textarea:focus {
+      outline: none;
+      border-color: #4361ee;
+      box-shadow: 0 0 0 3px rgba(67, 97, 238, 0.2);
+    }
+
+    .product-form textarea {
+      min-height: 120px;
+      resize: vertical;
+    }
+
+    /* Estilos para los iconos dentro de los inputs */
+    .form-group {
+      position: relative;
+    }
+
+    .form-group i {
+      position: absolute;
+      left: 15px;
+      top: 38px;
+      color: #6c757d;
+      font-size: 18px;
+    }
+
+    /* Estilos específicos para cada tipo de input */
+    .form-group:nth-child(1) i {
+      /* Icono para nombre del producto */
+      content: "\f466"; /* FontAwesome box icon */
+      font-family: 'Font Awesome 6 Free';
+      font-weight: 900;
+    }
+
+    .form-group:nth-child(2) i {
+      /* Icono para descripción */
+      content: "\f15c"; /* FontAwesome file-alt icon */
+      font-family: 'Font Awesome 6 Free';
+      font-weight: 900;
+      top: 38px;
+    }
+
+    .form-group:nth-child(3) i {
+      /* Icono para precio */
+      content: "\f155"; /* FontAwesome dollar-sign icon */
+      font-family: 'Font Awesome 6 Free';
+      font-weight: 900;
+    }
+
+    .form-group:nth-child(4) i {
+      /* Icono para stock */
+      content: "\f1b3"; /* FontAwesome cubes icon */
+      font-family: 'Font Awesome 6 Free';
+      font-weight: 900;
+    }
