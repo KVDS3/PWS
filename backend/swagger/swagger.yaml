@@ -1,6 +1,6 @@
 openapi: 3.0.0
 info:
-  title: API de Usuarios
+  title: API de Usuarios y Productos
   version: 1.0.0
 paths:
   /usuarios:
@@ -30,3 +30,26 @@ paths:
       responses:
         '201':
           description: Usuario creado
+  /productos:
+    get:
+      summary: Lista todos los productos
+      responses:
+        '200':
+          description: Lista de productos
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    id:
+                      type: integer
+                    nombre:
+                      type: string
+                    descripcion:
+                      type: string
+                    precio:
+                      type: string
+                    stock:
+                      type: integer

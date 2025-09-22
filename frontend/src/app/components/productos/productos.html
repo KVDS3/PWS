@@ -1,0 +1,75 @@
+<!-- Contenedor principal -->
+<div style="padding: 20px; font-family: Arial, sans-serif;">
+
+  <!-- Carrito arriba a la derecha -->
+  <div style="position: fixed; top: 20px; right: 20px; background-color: #ff9800; color: white; padding: 10px 20px; border-radius: 8px; cursor: pointer; box-shadow: 0 2px 5px rgba(0,0,0,0.2);">
+    🛒 Carrito
+  </div>
+
+  <!-- Título -->
+  <h1 style="margin-bottom: 20px; text-align: center;">Productos</h1>
+
+  <!-- Mensaje flotante -->
+  <div *ngIf="mostrarMensaje" style="
+    position: fixed;
+    top: 70px;
+    right: 20px;
+    background-color: #4caf50;
+    color: white;
+    padding: 15px 25px;
+    border-radius: 8px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+    animation: fadeInOut 3s forwards;
+    z-index: 1000;
+  ">
+    {{ mensajeCarrito }}
+  </div>
+
+  <!-- Contenedor de productos -->
+  <div style="display: flex; flex-wrap: wrap; gap: 20px; justify-content: center;">
+
+    <div *ngFor="let producto of productos" style="
+      border: 1px solid #ddd;
+      border-radius: 10px;
+      width: 220px;
+      padding: 15px;
+      text-align: center;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      transition: transform 0.2s;
+    " 
+      (mouseenter)="hover = true" (mouseleave)="hover = false"
+      [style.transform]="hover ? 'scale(1.05)' : 'scale(1)'">
+
+      <h3>{{ producto.nombre }}</h3>
+      <p>{{ producto.descripcion }}</p>
+      <p><strong>Precio:</strong> ${{ producto.precio }}</p>
+      <p><strong>Stock:</strong> {{ producto.stock }}</p>
+
+      <button (click)="agregarAlCarrito(producto)" style="
+        background-color: #2196f3;
+        color: white;
+        border: none;
+        padding: 10px 15px;
+        border-radius: 5px;
+        cursor: pointer;
+        transition: background-color 0.2s;
+      " 
+      (mouseenter)="hoverBtn=true" (mouseleave)="hoverBtn=false"
+      [style.backgroundColor]="hoverBtn ? '#1976d2' : '#2196f3'">
+        Agregar al carrito
+      </button>
+    </div>
+
+  </div>
+
+</div>
+
+<!-- Animación para el mensaje -->
+<style>
+@keyframes fadeInOut {
+  0% { opacity: 0; transform: translateY(-20px); }
+  10% { opacity: 1; transform: translateY(0); }
+  90% { opacity: 1; transform: translateY(0); }
+  100% { opacity: 0; transform: translateY(-20px); }
+}
+</style>

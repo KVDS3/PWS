@@ -1,0 +1,14 @@
+<div *ngIf="carrito.length > 0">
+  <h3>Tu carrito</h3>
+  <ul>
+    <li *ngFor="let item of carrito">{{item.nombre}} x {{item.cantidad}} - ${{item.precio}}</li>
+  </ul>
+
+  <h3>Pago con tarjeta</h3>
+  <div id="card-element" style="padding: 10px; border: 1px solid #ccc; border-radius: 4px;"></div>
+
+  <button (click)="pagar()">Pagar</button>
+</div>
+<div *ngIf="carrito.length === 0">
+  <p>El carrito está vacío</p>
+</div>
