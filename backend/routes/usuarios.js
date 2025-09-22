@@ -2,7 +2,8 @@ const express = require('express');
 const router = express.Router();
 const pool = require('../db/connection');
 const nodemailer = require('nodemailer');
-
+const { OAuth2Client } = require('google-auth-library');
+const client = new OAuth2Client('1023657360893-65p8bs4cd7jscntjspmfckb4hmnb8o6a.apps.googleusercontent.com'); 
 const verificationCodes = new Map();
 
 // Configuración de nodemailer
@@ -145,5 +146,96 @@ router.post('/login', async (req, res) => {
     res.status(500).json({ error: err.message });
   }
 });
+/**
+ * 6. Enviar código de recuperación
+ */
+router.post('/recovery/send-code', async (req, res) => {
+  const { email } = req.body;
+  if (!email) return res.status(400).json({ error: 'Correo requerido' });
 
+  const code = Math.floor(100000 + Math.random() * 900000).toString();
+  verificationCodes.set(email, code);
+
+  try {
+    await transporter.sendMail({
+      from: '"Sistema de Usuarios" <tu-correo@gmail.com>',
+      to: email,
+      subject: 'Código de recuperación',
+      text: `Tu código de recuperación es: ${code}`
+    });
+
+    res.json({ ok: true, message: 'Código de recuperación enviado al correo' });
+  } catch (err) {
+    res.status(500).json({ error: 'Error enviando el correo', detail: err.message });
+  }
+});
+
+/**
+ * 7. Verificar código de recuperación
+ */
+router.post('/recovery/verify-code', (req, res) => {
+  const { email, code } = req.body;
+  const storedCode = verificationCodes.get(email);
+
+  if (!storedCode || storedCode !== code) {
+    return res.status(400).json({ error: 'Código incorrecto o expirado' });
+  }
+
+  res.json({ ok: true, message: 'Código verificado' });
+});
+
+/**
+ * 8. Resetear contraseña
+ */
+router.post('/recovery/reset-password', async (req, res) => {
+  const { email, newPassword } = req.body;
+
+  try {
+    const result = await pool.query(
+      'UPDATE usuarios SET password = $1 WHERE email = $2 RETURNING id, nombre, email, rol',
+      [newPassword, email]
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: 'Usuario no encontrado' });
+    }
+
+    verificationCodes.delete(email);
+    res.json({ ok: true, message: 'Contraseña actualizada', usuario: result.rows[0] });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+router.post('/google-login', async (req, res) => {
+  const { token } = req.body;
+  try {
+    const ticket = await client.verifyIdToken({
+      idToken: token,
+      audience: '1023657360893-65p8bs4cd7jscntjspmfckb4hmnb8o6a.apps.googleusercontent.com',
+    });
+
+    const payload = ticket.getPayload();
+    const email = payload.email;
+    const nombre = payload.name;
+
+    // Buscar usuario en DB
+    let result = await pool.query('SELECT * FROM usuarios WHERE email = $1', [email]);
+
+    let usuario;
+    if (result.rows.length === 0) {
+      // Crear usuario si no existe
+      const insert = await pool.query(
+        'INSERT INTO usuarios (nombre, email, password, rol) VALUES ($1, $2, $3, $4) RETURNING id, nombre, email, rol',
+        [nombre, email, '', 'lector']
+      );
+      usuario = insert.rows[0];
+    } else {
+      usuario = result.rows[0];
+    }
+
+    res.json({ ok: true, usuario });
+  } catch (err) {
+    res.status(400).json({ error: 'Token inválido', detail: err.message });
+  }
+});
 module.exports = router;

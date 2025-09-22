@@ -355,3 +355,6 @@ body {
         padding: 20px;
     }
 }
+.google-signin {
+    margin-top: 15px; /* Ajusta el valor según el espacio que quieras */
+}

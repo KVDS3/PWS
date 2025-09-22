@@ -39,4 +39,23 @@ export class UsuarioService {
   verifyCode(email: string, code: string): Observable<any> {
     return this.http.post<any>(`${this.apiUrl}/usuarios/verify-code`, { email, code });
   }
+
+  // Enviar código de recuperación
+sendRecoveryCode(email: string): Observable<any> {
+  return this.http.post<any>(`${this.apiUrl}/usuarios/recovery/send-code`, { email });
+}
+
+// Verificar código de recuperación
+verifyRecoveryCode(email: string, code: string): Observable<any> {
+  return this.http.post<any>(`${this.apiUrl}/usuarios/recovery/verify-code`, { email, code });
+}
+
+// Cambiar contraseña después de verificar
+resetPassword(email: string, newPassword: string): Observable<any> {
+  return this.http.post<any>(`${this.apiUrl}/usuarios/recovery/reset-password`, { email, newPassword });
+}
+loginWithGoogle(token: string): Observable<any> {
+  return this.http.post<any>(`${this.apiUrl}/usuarios/google-login`, { token });
+}
+
 }
