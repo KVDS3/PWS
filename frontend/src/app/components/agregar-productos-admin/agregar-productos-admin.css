@@ -1,0 +1,457 @@
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+
+html, body {
+  height: 100%;
+  margin: 0;
+}
+
+body {
+  display: flex;
+  background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+}
+
+
+ .admin-sidebar {
+  width: 250px;
+  background: linear-gradient(to bottom, #4361ee, #3a0ca3);
+  color: white;
+  padding: 20px 0;
+  height: 100%;
+  position: fixed;
+  top: 0;
+  left: 0;
+  box-shadow: 0 0 15px rgba(0, 0, 0, 0.1);
+}
+
+
+
+    .admin-sidebar .logo {
+      text-align: center;
+      padding: 20px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+      margin-bottom: 20px;
+    }
+
+    .admin-sidebar .logo h2 {
+      font-size: 22px;
+      font-weight: 600;
+    }
+
+    .admin-sidebar ul {
+      list-style: none;
+    }
+
+    .admin-sidebar ul li {
+      padding: 15px 25px;
+      transition: all 0.3s ease;
+    }
+
+    .admin-sidebar ul li:hover {
+      background-color: rgba(255, 255, 255, 0.1);
+    }
+
+    .admin-sidebar ul li.active {
+      background-color: rgba(255, 255, 255, 0.2);
+      border-left: 4px solid white;
+    }
+
+    .admin-sidebar ul li a {
+      color: white;
+      text-decoration: none;
+      display: flex;
+      align-items: center;
+    }
+
+    .admin-sidebar ul li a i {
+      margin-right: 10px;
+      font-size: 18px;
+    }
+
+    /* Contenido principal */
+/* Contenido principal */
+.admin-main {
+  margin-left: 250px;   /* deja espacio para el sidebar */
+  padding: 20px;
+  min-height: 100vh;    /* ocupa toda la pantalla */
+  width: calc(100% - 250px);
+  box-sizing: border-box;
+  overflow-y: auto;     /* scroll independiente */
+}
+
+    .admin-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 30px;
+      background-color: white;
+      padding: 15px 25px;
+      border-radius: 8px;
+      box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+    }
+
+    .admin-header h1 {
+      color: #3a0ca3;
+      font-size: 24px;
+      font-weight: 600;
+    }
+
+    .user-info {
+      display: flex;
+      align-items: center;
+    }
+
+    .user-info img {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      margin-right: 10px;
+    }
+
+    /* Formulario de productos */
+    .product-form-container {
+      background-color: white;
+      border-radius: 12px;
+      box-shadow: 0 15px 30px rgba(0, 0, 0, 0.1);
+      padding: 25px;
+      margin-bottom: 30px;
+    }
+
+    .form-header {
+      background: linear-gradient(to right, #4361ee, #3a0ca3);
+      color: white;
+      padding: 20px;
+      text-align: center;
+      margin: -25px -25px 25px -25px;
+      border-radius: 12px 12px 0 0;
+    }
+
+    .form-header h2 {
+      font-size: 22px;
+      margin-bottom: 5px;
+      font-weight: 600;
+    }
+
+    .product-form {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+    }
+
+    .form-group {
+      margin-bottom: 20px;
+      position: relative;
+    }
+
+    .form-group.full-width {
+      grid-column: 1 / -1;
+    }
+
+    .form-group label {
+      display: block;
+      margin-bottom: 8px;
+      font-weight: 500;
+      color: #212529;
+    }
+
+    .form-control {
+      width: 100%;
+      padding: 12px 15px;
+      border: 1px solid #e9ecef;
+      border-radius: 6px;
+      font-size: 15px;
+      transition: all 0.3s ease;
+    }
+
+    .form-control:focus {
+      outline: none;
+      border-color: #4361ee;
+      box-shadow: 0 0 0 3px rgba(67, 97, 238, 0.2);
+    }
+
+    textarea.form-control {
+      min-height: 120px;
+      resize: vertical;
+    }
+
+    .input-icon {
+      position: relative;
+    }
+
+    .input-icon i {
+      position: absolute;
+      left: 15px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: #6c757d;
+    }
+
+    .input-icon input {
+      padding-left: 45px;
+    }
+
+    .btn {
+      display: inline-block;
+      padding: 12px 20px;
+      border: none;
+      border-radius: 6px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      text-align: center;
+    }
+
+    .btn-primary {
+      background-color: #4361ee;
+      color: white;
+    }
+
+    .btn-primary:hover {
+      background-color: #3a0ca3;
+    }
+
+    .btn-success {
+      background-color: #38b000;
+      color: white;
+    }
+
+    .btn-success:hover {
+      background-color: #2d9200;
+    }
+
+    .form-actions {
+      grid-column: 1 / -1;
+      display: flex;
+      justify-content: flex-end;
+      gap: 15px;
+      margin-top: 10px;
+    }
+
+    /* Lista de productos */
+    .products-list {
+      background-color: white;
+      border-radius: 12px;
+      box-shadow: 0 15px 30px rgba(0, 0, 0, 0.1);
+      padding: 25px;
+    }
+
+    .products-list h2 {
+      color: #3a0ca3;
+      margin-bottom: 20px;
+      font-size: 22px;
+      font-weight: 600;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    table th, table td {
+      padding: 12px 15px;
+      text-align: left;
+      border-bottom: 1px solid #e9ecef;
+    }
+
+    table th {
+      background-color: #f8f9fa;
+      color: #3a0ca3;
+      font-weight: 600;
+    }
+
+    table tr:hover {
+      background-color: #f8f9fa;
+    }
+
+    .action-buttons {
+      display: flex;
+      gap: 10px;
+    }
+
+    .btn-sm {
+      padding: 6px 12px;
+      font-size: 14px;
+    }
+
+    .btn-danger {
+      background-color: #f94144;
+      color: white;
+    }
+
+    .btn-danger:hover {
+      background-color: #d90429;
+    }
+
+    .btn-warning {
+      background-color: #f9c74f;
+      color: white;
+    }
+
+    .btn-warning:hover {
+      background-color: #f8961e;
+    }
+
+    /* Modal de éxito */
+    .modal-backdrop {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(0, 0, 0, 0.5);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      z-index: 1000;
+      animation: fadeIn 0.3s ease;
+    }
+
+    .modal-content {
+      background: white;
+      border-radius: 12px;
+      width: 90%;
+      max-width: 400px;
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+      overflow: hidden;
+      animation: slideIn 0.3s ease;
+    }
+
+    .modal-header {
+      background: linear-gradient(to right, #38b000, #2d9200);
+      color: white;
+      padding: 20px;
+      text-align: center;
+    }
+
+    .modal-header i {
+      font-size: 48px;
+      margin-bottom: 10px;
+      display: block;
+    }
+
+    .modal-header h2 {
+      margin: 0;
+      font-size: 24px;
+      font-weight: 600;
+    }
+
+    .modal-body {
+      padding: 25px;
+      text-align: center;
+    }
+
+    .modal-body p {
+      margin: 0;
+      color: #495057;
+      line-height: 1.5;
+      font-size: 16px;
+    }
+
+    .modal-footer {
+      padding: 15px 25px 25px;
+      text-align: center;
+    }
+
+    .modal-footer .btn {
+      max-width: 120px;
+    }
+
+    /* Animaciones */
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+
+    @keyframes slideIn {
+      from { 
+        opacity: 0;
+        transform: translateY(-20px) scale(0.95);
+      }
+      to { 
+        opacity: 1;
+        transform: translateY(0) scale(1);
+      }
+    }
+
+    /* Responsive */
+    @media (max-width: 992px) {
+      .admin-sidebar {
+        width: 200px;
+      }
+      
+      .admin-main {
+        margin-left: 200px;
+      }
+      
+      .product-form {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    @media (max-width: 768px) {
+      .admin-sidebar {
+        width: 70px;
+        overflow: hidden;
+      }
+      
+      .admin-sidebar .logo h2,
+      .admin-sidebar ul li a span {
+        display: none;
+      }
+      
+      .admin-sidebar ul li a i {
+        margin-right: 0;
+        font-size: 20px;
+      }
+      
+      .admin-main {
+        margin-left: 70px;
+      }
+      
+      .admin-header {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+      
+      .user-info {
+        margin-top: 15px;
+      }
+    }
+
+    @media (max-width: 576px) {
+      body {
+        flex-direction: column;
+      }
+      
+      .admin-sidebar {
+        width: 100%;
+        height: auto;
+        position: relative;
+        margin-bottom: 20px;
+      }
+      
+      .admin-sidebar ul {
+        display: flex;
+        overflow-x: auto;
+      }
+      
+      .admin-sidebar ul li {
+        padding: 15px;
+        white-space: nowrap;
+      }
+      
+      .admin-sidebar ul li a span {
+        display: inline;
+        margin-left: 10px;
+      }
+      
+      .admin-main {
+        margin-left: 0;
+      }
+    }

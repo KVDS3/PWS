@@ -2,13 +2,17 @@ const express = require('express');
 const router = express.Router();
 const pool = require('../db/connection');
 const nodemailer = require('nodemailer');
+const jwt = require('jsonwebtoken'); // <-- IMPORTANTE
 const { OAuth2Client } = require('google-auth-library');
 const client = new OAuth2Client('1023657360893-65p8bs4cd7jscntjspmfckb4hmnb8o6a.apps.googleusercontent.com'); 
 const verificationCodes = new Map();
 
+// Clave secreta para JWT (en producción usar variable de entorno)
+const JWT_SECRET = 'mi_clave_secreta';
+
 // Configuración de nodemailer
 const transporter = nodemailer.createTransport({
-  service: 'gmail', // o el SMTP de tu hosting
+  service: 'gmail',
   auth: {
     user: 'bodegaurbana0@gmail.com',
     pass: 'dxmk bdfg nsnx wtii'
@@ -20,10 +24,9 @@ const transporter = nodemailer.createTransport({
  */
 router.post('/send-code', async (req, res) => {
   const { email } = req.body;
-
   if (!email) return res.status(400).json({ error: 'Correo requerido' });
 
-const code = Math.floor(100000 + Math.random() * 900000).toString(); // 6 dígitos
+  const code = Math.floor(100000 + Math.random() * 900000).toString(); // 6 dígitos
   verificationCodes.set(email, code);
 
   try {
@@ -46,14 +49,12 @@ const code = Math.floor(100000 + Math.random() * 900000).toString(); // 6 dígit
 router.post('/verify-code', async (req, res) => {
   const { nombre, email, password, rol, code } = req.body;
 
-  // Validar que el código existe y coincide (case insensitive)
   const storedCode = verificationCodes.get(email);
   if (!storedCode || storedCode !== code) {
     return res.status(400).json({ error: 'Código incorrecto o expirado' });
   }
 
   try {
-    // Verificar si el usuario ya existe
     const userExists = await pool.query(
       'SELECT id FROM usuarios WHERE email = $1',
       [email]
@@ -65,13 +66,15 @@ router.post('/verify-code', async (req, res) => {
 
     const result = await pool.query(
       'INSERT INTO usuarios (nombre, email, password, rol) VALUES ($1, $2, $3, $4) RETURNING id, nombre, email, rol',
-      [nombre, email, password, rol || 'lector'] // Valor por defecto para rol
+      [nombre, email, password, rol || 'lector']
     );
 
-    // Eliminar el código usado
     verificationCodes.delete(email);
 
-    res.status(201).json({ ok: true, usuario: result.rows[0] });
+    // Generar token JWT
+    const token = jwt.sign({ id: result.rows[0].id, nombre, email }, JWT_SECRET, { expiresIn: '1h' });
+
+    res.status(201).json({ ok: true, usuario: result.rows[0], token });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
@@ -90,7 +93,7 @@ router.get('/', async (req, res) => {
 });
 
 /**
- * 4. Crear nuevo usuario (sin código de verificación)
+ * 4. Crear nuevo usuario (sin código)
  */
 router.post('/', async (req, res) => {
   const { nombre, email, password, rol } = req.body;
@@ -104,7 +107,10 @@ router.post('/', async (req, res) => {
       'INSERT INTO usuarios (nombre, email, password, rol) VALUES ($1, $2, $3, $4) RETURNING id, nombre, email, rol',
       [nombre, email, password, rol]
     );
-    res.status(201).json(result.rows[0]);
+
+    const token = jwt.sign({ id: result.rows[0].id, nombre, email }, JWT_SECRET, { expiresIn: '1h' });
+
+    res.status(201).json({ ok: true, usuario: result.rows[0], token });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
@@ -128,24 +134,21 @@ router.post('/login', async (req, res) => {
 
     const user = result.rows[0];
 
-    // Comparar contraseñas (⚠️ en producción usar bcrypt)
     if (user.password !== password) {
       return res.status(401).json({ error: 'Correo o contraseña incorrectos' });
     }
 
-    // Eliminar password del objeto antes de devolverlo
     delete user.password;
 
-    res.json({ 
-      ok: true,
-      message: 'Login exitoso',
-      usuario: user
-    });
+    // Generar token JWT
+    const token = jwt.sign({ id: user.id, nombre: user.nombre, email: user.email }, JWT_SECRET, { expiresIn: '1h' });
 
+    res.json({ ok: true, message: 'Login exitoso', usuario: user, token });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
 });
+
 /**
  * 6. Enviar código de recuperación
  */
@@ -201,11 +204,18 @@ router.post('/recovery/reset-password', async (req, res) => {
     }
 
     verificationCodes.delete(email);
-    res.json({ ok: true, message: 'Contraseña actualizada', usuario: result.rows[0] });
+
+    const token = jwt.sign({ id: result.rows[0].id, nombre: result.rows[0].nombre, email: result.rows[0].email }, JWT_SECRET, { expiresIn: '1h' });
+
+    res.json({ ok: true, message: 'Contraseña actualizada', usuario: result.rows[0], token });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
 });
+
+/**
+ * 9. Login con Google
+ */
 router.post('/google-login', async (req, res) => {
   const { token } = req.body;
   try {
@@ -218,12 +228,10 @@ router.post('/google-login', async (req, res) => {
     const email = payload.email;
     const nombre = payload.name;
 
-    // Buscar usuario en DB
     let result = await pool.query('SELECT * FROM usuarios WHERE email = $1', [email]);
 
     let usuario;
     if (result.rows.length === 0) {
-      // Crear usuario si no existe
       const insert = await pool.query(
         'INSERT INTO usuarios (nombre, email, password, rol) VALUES ($1, $2, $3, $4) RETURNING id, nombre, email, rol',
         [nombre, email, '', 'lector']
@@ -233,9 +241,13 @@ router.post('/google-login', async (req, res) => {
       usuario = result.rows[0];
     }
 
-    res.json({ ok: true, usuario });
+    // Generar token JWT
+    const jwtToken = jwt.sign({ id: usuario.id, nombre: usuario.nombre, email: usuario.email }, JWT_SECRET, { expiresIn: '1h' });
+
+    res.json({ ok: true, usuario, token: jwtToken });
   } catch (err) {
     res.status(400).json({ error: 'Token inválido', detail: err.message });
   }
 });
+
 module.exports = router;

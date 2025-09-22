@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Panel de Administración - Agregar Productos</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+ 
+</head>
+<body>
+  <!-- Panel lateral -->
+  <div class="admin-sidebar">
+    <div class="logo">
+      <h2>Panel Admin</h2>
+    </div>
+    <ul>
+      <li><a href="#"><i class="fas fa-tachometer-alt"></i> <span>Dashboard</span></a></li>
+      <li class="active"><a href="#"><i class="fas fa-box"></i> <span>Productos</span></a></li>
+      <li><a href="#"><i class="fas fa-users"></i> <span>Usuarios</span></a></li>
+      <li><a href="#"><i class="fas fa-shopping-cart"></i> <span>Pedidos</span></a></li>
+      <li><a href="#"><i class="fas fa-chart-bar"></i> <span>Reportes</span></a></li>
+      <li><a href="#"><i class="fas fa-cog"></i> <span>Configuración</span></a></li>
+      <li><a href="#"><i class="fas fa-sign-out-alt"></i> <span>Cerrar Sesión</span></a></li>
+    </ul>
+  </div>
+
+  <!-- Contenido principal -->
+  <div class="admin-main">
+    <div class="admin-header">
+      <h1>Gestión de Productos</h1>
+      <div class="user-info">
+        <img src="https://ui-avatars.com/api/?name=Admin+User&background=4361ee&color=fff" alt="Usuario">
+        <span>Administrador</span>
+      </div>
+    </div>
+
+    <!-- Formulario para agregar productos -->
+    <div class="product-form-container">
+      <div class="form-header">
+        <h2>Agregar Nuevo Producto</h2>
+        <p>Completa la información del producto</p>
+      </div>
+
+      <form class="product-form">
+        <div class="form-group">
+          <label for="product-name">Nombre del Producto</label>
+          <div class="input-icon">
+            <i class="fas fa-box"></i>
+            <input type="text" class="form-control" id="product-name" placeholder="Ej: Laptop HP Pavilion" required>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="product-category">Categoría</label>
+          <div class="input-icon">
+            <i class="fas fa-tag"></i>
+            <select class="form-control" id="product-category" required>
+              <option value="">Selecciona una categoría</option>
+              <option value="electronics">Electrónicos</option>
+              <option value="clothing">Ropa</option>
+              <option value="home">Hogar</option>
+              <option value="sports">Deportes</option>
+              <option value="books">Libros</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="product-price">Precio ($)</label>
+          <div class="input-icon">
+            <i class="fas fa-dollar-sign"></i>
+            <input type="number" class="form-control" id="product-price" step="0.01" min="0" placeholder="0.00" required>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="product-stock">Stock Disponible</label>
+          <div class="input-icon">
+            <i class="fas fa-cubes"></i>
+            <input type="number" class="form-control" id="product-stock" min="0" placeholder="0" required>
+          </div>
+        </div>
+
+        <div class="form-group full-width">
+          <label for="product-description">Descripción del Producto</label>
+          <textarea class="form-control" id="product-description" placeholder="Describe detalladamente el producto..." required></textarea>
+        </div>
+
+        <div class="form-group full-width">
+          <label for="product-image">Imagen del Producto</label>
+          <input type="file" class="form-control" id="product-image" accept="image/*">
+        </div>
+
+        <div class="form-actions">
+          <button type="reset" class="btn btn-warning">Limpiar</button>
+          <button type="submit" class="btn btn-success">Agregar Producto</button>
+        </div>
+      </form>
+    </div>
+
+    <!-- Lista de productos existentes -->
+    <div class="products-list">
+      <h2>Productos Existentes</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>Nombre</th>
+            <th>Categoría</th>
+            <th>Precio</th>
+            <th>Stock</th>
+            <th>Acciones</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Laptop HP Pavilion</td>
+            <td>Electrónicos</td>
+            <td>$899.99</td>
+            <td>15</td>
+            <td class="action-buttons">
+              <button class="btn btn-primary btn-sm"><i class="fas fa-edit"></i></button>
+              <button class="btn btn-danger btn-sm"><i class="fas fa-trash"></i></button>
+            </td>
+          </tr>
+          <tr>
+            <td>Zapatillas Deportivas</td>
+            <td>Deportes</td>
+            <td>$79.99</td>
+            <td>42</td>
+            <td class="action-buttons">
+              <button class="btn btn-primary btn-sm"><i class="fas fa-edit"></i></button>
+              <button class="btn btn-danger btn-sm"><i class="fas fa-trash"></i></button>
+            </td>
+          </tr>
+          <tr>
+            <td>Smartphone Samsung Galaxy</td>
+            <td>Electrónicos</td>
+            <td>$699.99</td>
+            <td>8</td>
+            <td class="action-buttons">
+              <button class="btn btn-primary btn-sm"><i class="fas fa-edit"></i></button>
+              <button class="btn btn-danger btn-sm"><i class="fas fa-trash"></i></button>
+            </td>
+          </tr>
+          <tr>
+            <td>Libro: Aprende Angular</td>
+            <td>Libros</td>
+            <td>$29.99</td>
+            <td>23</td>
+            <td class="action-buttons">
+              <button class="btn btn-primary btn-sm"><i class="fas fa-edit"></i></button>
+              <button class="btn btn-danger btn-sm"><i class="fas fa-trash"></i></button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Modal de éxito (oculto inicialmente) -->
+  <div class="modal-backdrop" style="display: none;">
+    <div class="modal-content">
+      <div class="modal-header">
+        <i class="fas fa-check-circle"></i>
+        <h2>¡Producto Agregado!</h2>
+      </div>
+      <div class="modal-body">
+        <p>El producto se ha agregado correctamente al catálogo.</p>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-primary">Aceptar</button>
+      </div>
+    </div>
+  </div>
+
+
+</body>
+</html>
