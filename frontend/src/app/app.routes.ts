@@ -7,21 +7,21 @@ import { Pago } from './components/pago/pago';
 import { Login } from './components/login/login';
 import { Mapa } from './components/mapa/mapa';
 import { AgregarProductosAdmin } from './components/agregar-productos-admin/agregar-productos-admin';
+import { config } from 'rxjs';
+import { Configuracion } from './components/configuracion/configuracion';
 
 export const routes: Routes = [
-  { path: '', component: Usuarios },
+  { path: 'usuarios', component: Usuarios },
   { path: 'productos', component: Productos },
   { path: 'carrito', component: CarritoComponent },
   { path: 'resumen', component: ResumenCompra },
   { path: 'pago', component: Pago },
+
 {
      path: '', 
-     component: Usuarios
-},
-{
-     path: 'login', 
      component: Login
 },
+
 {
      path: 'mapa', 
      component: Mapa
@@ -29,5 +29,9 @@ export const routes: Routes = [
 {
      path: 'agregarProducto', 
      component: AgregarProductosAdmin
+},
+{
+     path: 'configuracion', 
+     component: Configuracion
 }
 ];

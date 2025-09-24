@@ -1,0 +1,466 @@
+<div class="configuracion-wrapper">
+  <!-- Header -->
+  <div class="config-header">
+    <div class="container">
+      <a href="http://localhost:4200" class="back-button">
+        <i class="fas fa-arrow-left"></i>
+        Volver al Inicio
+      </a>
+      <h1 class="config-title">
+        <i class="fas fa-cog"></i>
+        Configuración de Cuenta
+      </h1>
+      <p class="config-subtitle">Personaliza tu experiencia en Tienda Épica</p>
+    </div>
+  </div>
+
+  <div class="container">
+    <div class="config-layout">
+      <!-- Sidebar de navegación -->
+      <div class="config-sidebar">
+        <div class="user-profile-card">
+          <div class="profile-avatar">
+            <img src="https://via.placeholder.com/80x80/4361ee/ffffff?text=U" alt="Avatar">
+            <button class="edit-avatar-btn">
+              <i class="fas fa-camera"></i>
+            </button>
+          </div>
+          <div class="profile-info">
+            <h3>{{usuario?.nombre || 'Usuario'}}</h3>
+            <p>{{usuario?.email || 'usuario@ejemplo.com'}}</p>
+            <span class="member-since">Miembro desde {{fechaRegistro}}</span>
+          </div>
+        </div>
+
+        <nav class="config-nav">
+          <!-- CORREGIDO: Usar [class.active] para cada botón -->
+          <button class="nav-item" 
+                  [class.active]="seccionActiva === 'perfil'" 
+                  (click)="cambiarSeccion('perfil')">
+            <i class="fas fa-user"></i>
+            Perfil
+          </button>
+          <button class="nav-item" 
+                  [class.active]="seccionActiva === 'seguridad'" 
+                  (click)="cambiarSeccion('seguridad')">
+            <i class="fas fa-shield-alt"></i>
+            Seguridad
+          </button>
+          <button class="nav-item" 
+                  [class.active]="seccionActiva === 'notificaciones'" 
+                  (click)="cambiarSeccion('notificaciones')">
+            <i class="fas fa-bell"></i>
+            Notificaciones
+          </button>
+          <button class="nav-item" 
+                  [class.active]="seccionActiva === 'apariencia'" 
+                  (click)="cambiarSeccion('apariencia')">
+            <i class="fas fa-palette"></i>
+            Apariencia
+          </button>
+          <button class="nav-item" 
+                  [class.active]="seccionActiva === 'privacidad'" 
+                  (click)="cambiarSeccion('privacidad')">
+            <i class="fas fa-lock"></i>
+            Privacidad
+          </button>
+          <button class="nav-item" 
+                  [class.active]="seccionActiva === 'cuenta'" 
+                  (click)="cambiarSeccion('cuenta')">
+            <i class="fas fa-cog"></i>
+            Configuración de Cuenta
+          </button>
+        </nav>
+      </div>
+
+      <!-- Contenido principal -->
+      <div class="config-content">
+        <!-- Sección: Perfil -->
+        <div *ngIf="seccionActiva === 'perfil'" class="config-section">
+          <div class="section-header">
+            <h2><i class="fas fa-user"></i> Información Personal</h2>
+            <p>Actualiza tu información personal y detalles de contacto</p>
+          </div>
+
+          <form class="config-form" [formGroup]="perfilForm">
+            <div class="form-row">
+              <div class="form-group">
+                <label for="nombre">Nombre completo</label>
+                <input type="text" id="nombre" formControlName="nombre" placeholder="Tu nombre completo">
+              </div>
+              <div class="form-group">
+                <label for="email">Correo electrónico</label>
+                <input type="email" id="email" formControlName="email" placeholder="tu@email.com">
+              </div>
+            </div>
+
+            <div class="form-row">
+              <div class="form-group">
+                <label for="telefono">Teléfono</label>
+                <input type="tel" id="telefono" formControlName="telefono" placeholder="+1 234 567 890">
+              </div>
+              <div class="form-group">
+                <label for="fechaNacimiento">Fecha de nacimiento</label>
+                <input type="date" id="fechaNacimiento" formControlName="fechaNacimiento">
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label for="direccion">Dirección</label>
+              <textarea id="direccion" formControlName="direccion" placeholder="Tu dirección completa" rows="3"></textarea>
+            </div>
+
+            <div class="form-actions">
+              <button type="button" class="btn-secondary">Cancelar</button>
+              <button type="submit" class="btn-primary" (click)="guardarPerfil()">
+                <i class="fas fa-save"></i>
+                Guardar Cambios
+              </button>
+            </div>
+          </form>
+        </div>
+
+        <!-- Sección: Seguridad -->
+        <div *ngIf="seccionActiva === 'seguridad'" class="config-section">
+          <div class="section-header">
+            <h2><i class="fas fa-shield-alt"></i> Seguridad de la Cuenta</h2>
+            <p>Gestiona la seguridad de tu cuenta y contraseña</p>
+          </div>
+
+          <div class="security-cards">
+            <div class="security-card">
+              <div class="security-icon">
+                <i class="fas fa-key"></i>
+              </div>
+              <div class="security-info">
+                <h3>Cambiar Contraseña</h3>
+                <p>Actualiza tu contraseña regularmente para mantener tu cuenta segura</p>
+              </div>
+              <button class="security-action" (click)="mostrarCambioPassword()">
+                Cambiar
+              </button>
+            </div>
+
+            <div class="security-card">
+              <div class="security-icon">
+                <i class="fas fa-mobile-alt"></i>
+              </div>
+              <div class="security-info">
+                <h3>Autenticación de Dos Factores</h3>
+                <p>Añade una capa extra de seguridad a tu cuenta</p>
+              </div>
+              <div class="toggle-switch">
+                <input type="checkbox" id="2fa" [checked]="autenticacionDosFactores" 
+                       (change)="toggleAutenticacionDosFactores($event)">
+                <label for="2fa"></label>
+              </div>
+            </div>
+
+            <div class="security-card">
+              <div class="security-icon">
+                <i class="fas fa-laptop"></i>
+              </div>
+              <div class="security-info">
+                <h3>Sesiones Activas</h3>
+                <p>Gestiona los dispositivos donde has iniciado sesión</p>
+              </div>
+              <button class="security-action" (click)="verSesionesActivas()">
+                Ver Todas
+              </button>
+            </div>
+          </div>
+
+          <!-- Modal cambio de contraseña -->
+          <div *ngIf="mostrarModalPassword" class="modal-overlay">
+            <div class="modal-content">
+              <div class="modal-header">
+                <h3>Cambiar Contraseña</h3>
+                <button class="close-btn" (click)="cerrarModalPassword()">
+                  <i class="fas fa-times"></i>
+                </button>
+              </div>
+              <form class="password-form">
+                <div class="form-group">
+                  <label for="currentPassword">Contraseña Actual</label>
+                  <input type="password" id="currentPassword" placeholder="Ingresa tu contraseña actual">
+                </div>
+                <div class="form-group">
+                  <label for="newPassword">Nueva Contraseña</label>
+                  <input type="password" id="newPassword" placeholder="Ingresa tu nueva contraseña">
+                </div>
+                <div class="form-group">
+                  <label for="confirmPassword">Confirmar Contraseña</label>
+                  <input type="password" id="confirmPassword" placeholder="Confirma tu nueva contraseña">
+                </div>
+                <div class="form-actions">
+                  <button type="button" class="btn-secondary" (click)="cerrarModalPassword()">Cancelar</button>
+                  <button type="submit" class="btn-primary">Actualizar Contraseña</button>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+
+        <!-- Sección: Notificaciones -->
+        <div *ngIf="seccionActiva === 'notificaciones'" class="config-section">
+          <div class="section-header">
+            <h2><i class="fas fa-bell"></i> Preferencias de Notificaciones</h2>
+            <p>Controla cómo y cuándo recibir notificaciones</p>
+          </div>
+
+          <div class="notification-settings">
+            <div class="notification-category">
+              <h3>Notificaciones por Email</h3>
+              
+              <div class="setting-item">
+                <div class="setting-info">
+                  <h4>Ofertas y Promociones</h4>
+                  <p>Recibe notificaciones sobre ofertas especiales y descuentos</p>
+                </div>
+                <div class="toggle-switch">
+                  <input type="checkbox" id="email-ofertas" [checked]="notificaciones.emailOfertas" 
+                         (change)="toggleNotificacion('emailOfertas', $event)">
+                  <label for="email-ofertas"></label>
+                </div>
+              </div>
+
+              <div class="setting-item">
+                <div class="setting-info">
+                  <h4>Estado de Pedidos</h4>
+                  <p>Notificaciones sobre el estado de tus compras y envíos</p>
+                </div>
+                <div class="toggle-switch">
+                  <input type="checkbox" id="email-pedidos" [checked]="notificaciones.emailPedidos" 
+                         (change)="toggleNotificacion('emailPedidos', $event)">
+                  <label for="email-pedidos"></label>
+                </div>
+              </div>
+
+              <div class="setting-item">
+                <div class="setting-info">
+                  <h4>Newsletter</h4>
+                  <p>Recibe nuestro newsletter con novedades y consejos</p>
+                </div>
+                <div class="toggle-switch">
+                  <input type="checkbox" id="email-newsletter" [checked]="notificaciones.emailNewsletter" 
+                         (change)="toggleNotificacion('emailNewsletter', $event)">
+                  <label for="email-newsletter"></label>
+                </div>
+              </div>
+            </div>
+
+            <div class="notification-category">
+              <h3>Notificaciones Push</h3>
+              
+              <div class="setting-item">
+                <div class="setting-info">
+                  <h4>Notificaciones en Tiempo Real</h4>
+                  <p>Recibe notificaciones instantáneas en tu dispositivo</p>
+                </div>
+                <div class="toggle-switch">
+                  <input type="checkbox" id="push-tiempo-real" [checked]="notificaciones.pushTiempoReal" 
+                         (change)="toggleNotificacion('pushTiempoReal', $event)">
+                  <label for="push-tiempo-real"></label>
+                </div>
+              </div>
+
+              <div class="setting-item">
+                <div class="setting-info">
+                  <h4>Recordatorios de Carrito</h4>
+                  <p>Notificaciones sobre productos en tu carrito</p>
+                </div>
+                <div class="toggle-switch">
+                  <input type="checkbox" id="push-carrito" [checked]="notificaciones.pushCarrito" 
+                         (change)="toggleNotificacion('pushCarrito', $event)">
+                  <label for="push-carrito"></label>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Sección: Apariencia -->
+        <div *ngIf="seccionActiva === 'apariencia'" class="config-section">
+          <div class="section-header">
+            <h2><i class="fas fa-palette"></i> Personalización de Apariencia</h2>
+            <p>Personaliza la apariencia de la aplicación según tus preferencias</p>
+          </div>
+
+          <div class="appearance-settings">
+            <div class="theme-selection">
+              <h3>Tema de la Aplicación</h3>
+              <div class="theme-options">
+                <div class="theme-option" [class.active]="temaSeleccionado === 'claro'" 
+                     (click)="cambiarTema('claro')">
+                  <div class="theme-preview claro"></div>
+                  <span>Tema Claro</span>
+                </div>
+                <div class="theme-option" [class.active]="temaSeleccionado === 'oscuro'" 
+                     (click)="cambiarTema('oscuro')">
+                  <div class="theme-preview oscuro"></div>
+                  <span>Tema Oscuro</span>
+                </div>
+                <div class="theme-option" [class.active]="temaSeleccionado === 'auto'" 
+                     (click)="cambiarTema('auto')">
+                  <div class="theme-preview auto"></div>
+                  <span>Automático</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="accent-color">
+              <h3>Color de Acento</h3>
+              <div class="color-options">
+                <div *ngFor="let color of coloresAcento" 
+                     class="color-option" 
+                     [class.active]="colorActivo === color.nombre"
+                     [style.background]="color.codigo"
+                     (click)="seleccionarColor(color.nombre)">
+                  <i class="fas fa-check" *ngIf="colorActivo === color.nombre"></i>
+                </div>
+              </div>
+            </div>
+
+            <div class="font-size">
+              <h3>Tamaño de Fuente</h3>
+              <div class="font-options">
+                <button class="font-option" [class.active]="tamanoFuente === 'pequeno'"
+                        (click)="cambiarTamanoFuente('pequeno')">
+                  A
+                </button>
+                <button class="font-option" [class.active]="tamanoFuente === 'medio'"
+                        (click)="cambiarTamanoFuente('medio')">
+                  A
+                </button>
+                <button class="font-option" [class.active]="tamanoFuente === 'grande'"
+                        (click)="cambiarTamanoFuente('grande')">
+                  A
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Sección: Privacidad -->
+        <div *ngIf="seccionActiva === 'privacidad'" class="config-section">
+          <div class="section-header">
+            <h2><i class="fas fa-lock"></i> Configuración de Privacidad</h2>
+            <p>Controla tu privacidad y los datos que compartes</p>
+          </div>
+
+          <div class="privacy-settings">
+            <div class="privacy-item">
+              <div class="privacy-info">
+                <h3>Perfil Público</h3>
+                <p>Permite que otros usuarios vean tu perfil y reseñas</p>
+              </div>
+              <div class="toggle-switch">
+                <input type="checkbox" id="perfil-publico" [checked]="privacidad.perfilPublico" 
+                       (change)="togglePrivacidad('perfilPublico', $event)">
+                <label for="perfil-publico"></label>
+              </div>
+            </div>
+
+            <div class="privacy-item">
+              <div class="privacy-info">
+                <h3>Compartir datos de uso</h3>
+                <p>Permite que mejoremos la aplicación con datos anónimos de uso</p>
+              </div>
+              <div class="toggle-switch">
+                <input type="checkbox" id="datos-uso" [checked]="privacidad.datosUso" 
+                       (change)="togglePrivacidad('datosUso', $event)">
+                <label for="datos-uso"></label>
+              </div>
+            </div>
+
+            <div class="privacy-item">
+              <div class="privacy-info">
+                <h3>Personalización de anuncios</h3>
+                <p>Permite anuncios personalizados según tus intereses</p>
+              </div>
+              <div class="toggle-switch">
+                <input type="checkbox" id="anuncios-personalizados" [checked]="privacidad.anunciosPersonalizados" 
+                       (change)="togglePrivacidad('anunciosPersonalizados', $event)">
+                <label for="anuncios-personalizados"></label>
+              </div>
+            </div>
+
+            <div class="privacy-actions">
+              <button class="btn-outline">
+                <i class="fas fa-download"></i>
+                Descargar Mis Datos
+              </button>
+              <button class="btn-danger">
+                <i class="fas fa-trash"></i>
+                Eliminar Cuenta
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Sección: Configuración de Cuenta -->
+        <div *ngIf="seccionActiva === 'cuenta'" class="config-section">
+          <div class="section-header">
+            <h2><i class="fas fa-cog"></i> Configuración General</h2>
+            <p>Opciones generales de tu cuenta</p>
+          </div>
+
+          <div class="account-settings">
+            <div class="account-item">
+              <div class="account-info">
+                <h3>Idioma</h3>
+                <p>Selecciona el idioma de la aplicación</p>
+              </div>
+              <select class="language-select" [(ngModel)]="idiomaSeleccionado" 
+                      (change)="cambiarIdioma($event)">
+                <option value="es">Español</option>
+                <option value="en">English</option>
+                <option value="fr">Français</option>
+                <option value="de">Deutsch</option>
+              </select>
+            </div>
+
+            <div class="account-item">
+              <div class="account-info">
+                <h3>Moneda</h3>
+                <p>Selecciona tu moneda preferida</p>
+              </div>
+              <select class="currency-select" [(ngModel)]="monedaSeleccionada" 
+                      (change)="cambiarMoneda($event)">
+                <option value="USD">USD - Dólar Americano</option>
+                <option value="EUR">EUR - Euro</option>
+                <option value="MXN">MXN - Peso Mexicano</option>
+                <option value="COP">COP - Peso Colombiano</option>
+              </select>
+            </div>
+
+            <div class="account-item">
+              <div class="account-info">
+                <h3>Zona Horaria</h3>
+                <p>Configura tu zona horaria local</p>
+              </div>
+              <select class="timezone-select" [(ngModel)]="zonaHoraria" 
+                      (change)="cambiarZonaHoraria($event)">
+                <option value="-5">UTC-5 (EST)</option>
+                <option value="-6">UTC-6 (CST)</option>
+                <option value="-7">UTC-7 (MST)</option>
+                <option value="-8">UTC-8 (PST)</option>
+              </select>
+            </div>
+
+            <div class="account-actions">
+              <button class="btn-secondary">
+                <i class="fas fa-sync"></i>
+                Restablecer Configuración
+              </button>
+              <button class="btn-primary" (click)="guardarConfiguracion()">
+                <i class="fas fa-save"></i>
+                Guardar Todas las Configuraciones
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

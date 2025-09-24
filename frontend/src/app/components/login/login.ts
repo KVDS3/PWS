@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { UsuarioService } from '../../services/usuarios';
+import { ConfiguracionService } from '../../services/configuracion';
 import { Usuario } from '../../models/usuarios';
 import { Subscription } from 'rxjs';
 
@@ -52,6 +53,7 @@ export class Login implements OnDestroy, AfterViewInit {
 
   constructor(
     private usuarioService: UsuarioService,
+    private configuracionService: ConfiguracionService,
     private router: Router,
     private cdRef: ChangeDetectorRef,
     private ngZone: NgZone
@@ -77,11 +79,15 @@ export class Login implements OnDestroy, AfterViewInit {
       next: (res) => {
         if (res?.ok && res.usuario) {
           localStorage.setItem('usuario', JSON.stringify(res.usuario));
-          localStorage.setItem('token', res.token); // <-- JWT
-          console.log('JWT token de Google:', res.token);
+          localStorage.setItem('token', res.token); // JWT
           this.decodeToken(res.token);
-          
-          // Redirigir según rol
+
+          // Crear configuración si no existe
+          this.configuracionService.crearConfiguracion(res.usuario.id).subscribe({
+            next: () => console.log('Configuración creada/obtenida'),
+            error: (err) => console.error('Error creando configuración', err)
+          });
+
           this.redirigirPorRol(res.usuario);
         } else {
           this.error = 'Error al iniciar con Google';
@@ -132,11 +138,15 @@ export class Login implements OnDestroy, AfterViewInit {
         this.isLoading = false;
         if (res?.ok && res.usuario) {
           localStorage.setItem('usuario', JSON.stringify(res.usuario));
-          localStorage.setItem('token', res.token); 
-          console.log('JWT token:', res.token);
+          localStorage.setItem('token', res.token);
           this.decodeToken(res.token);
 
-          // Redirigir según rol
+          // Crear configuración si no existe
+          this.configuracionService.crearConfiguracion(res.usuario.id).subscribe({
+            next: () => console.log('Configuración creada/obtenida'),
+            error: (err) => console.error('Error creando configuración', err)
+          });
+
           this.redirigirPorRol(res.usuario);
         } else {
           this.error = 'Credenciales inválidas';
@@ -153,7 +163,7 @@ export class Login implements OnDestroy, AfterViewInit {
     this.subscriptions.add(sub);
   }
 
-  // REGISTRO
+  // Registro
   onRegister(): void {
     if (!this.nuevoUsuario.nombre || !this.nuevoUsuario.email || !this.nuevoUsuario.password) {
       this.error = 'Todos los campos son obligatorios';
@@ -230,7 +240,7 @@ export class Login implements OnDestroy, AfterViewInit {
     this.subscriptions.add(sub);
   }
 
-  // RECUPERACIÓN
+  // Recuperación
   onRecovery(): void {
     if (!this.recoveryEmail) {
       this.error = 'Debes ingresar un correo';
@@ -238,12 +248,8 @@ export class Login implements OnDestroy, AfterViewInit {
     }
 
     const sub = this.usuarioService.sendRecoveryCode(this.recoveryEmail).subscribe({
-      next: () => {
-        this.selectTab('recoveryVerify');
-      },
-      error: (err) => {
-        this.error = err.error?.error || 'Error enviando código de recuperación';
-      }
+      next: () => this.selectTab('recoveryVerify'),
+      error: (err) => this.error = err.error?.error || 'Error enviando código de recuperación'
     });
 
     this.subscriptions.add(sub);
@@ -256,12 +262,8 @@ export class Login implements OnDestroy, AfterViewInit {
     }
 
     const sub = this.usuarioService.verifyRecoveryCode(this.recoveryEmail, this.recoveryCode).subscribe({
-      next: () => {
-        this.selectTab('resetPassword');
-      },
-      error: (err) => {
-        this.error = err.error?.error || 'Error verificando código';
-      }
+      next: () => this.selectTab('resetPassword'),
+      error: (err) => this.error = err.error?.error || 'Error verificando código'
     });
 
     this.subscriptions.add(sub);
@@ -282,9 +284,7 @@ export class Login implements OnDestroy, AfterViewInit {
         this.successMessage = 'Tu contraseña fue restablecida correctamente';
         this.showSuccessModal = true;
       },
-      error: (err) => {
-        this.error = err.error?.error || 'Error restableciendo contraseña';
-      }
+      error: (err) => this.error = err.error?.error || 'Error restableciendo contraseña'
     });
 
     this.subscriptions.add(sub);

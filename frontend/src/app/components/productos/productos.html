@@ -5,185 +5,240 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Tienda Épica - Productos</title>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-  <style>
-    /* Estilos para el navbar */
-    .navbar {
-      background: linear-gradient(to right, #4361ee, #3a0ca3);
-      color: white;
-      padding: 15px 30px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-      position: sticky;
-      top: 0;
-      z-index: 1000;
-    }
-
-    .navbar-brand {
-      font-size: 24px;
-      font-weight: 700;
-      display: flex;
-      align-items: center;
-      gap: 10px;
-    }
-
-    .navbar-brand i {
-      font-size: 28px;
-    }
-
-    .cart-button {
-      background: rgba(255, 255, 255, 0.2);
-      color: white;
-      padding: 10px 20px;
-      border-radius: 8px;
-      cursor: pointer;
-      font-weight: 600;
-      transition: all 0.3s ease;
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      border: 1px solid rgba(255, 255, 255, 0.3);
-      text-decoration: none;
-    }
-
-    .cart-button:hover {
-      background: rgba(255, 255, 255, 0.3);
-      transform: translateY(-2px);
-    }
-
-    /* Estilos para el buscador */
-    .search-container {
-      display: flex;
-      justify-content: center;
-      margin: 20px 0 30px;
-    }
-
-    .search-box {
-      display: flex;
-      width: 100%;
-      max-width: 500px;
-      background: white;
-      border-radius: 8px;
-      overflow: hidden;
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-    }
-
-    .search-input {
-      flex: 1;
-      padding: 14px 20px;
-      border: none;
-      font-size: 16px;
-      outline: none;
-    }
-
-    .search-button {
-      background: linear-gradient(to right, #4361ee, #3a0ca3);
-      color: white;
-      border: none;
-      padding: 0 20px;
-      cursor: pointer;
-      transition: all 0.3s ease;
-    }
-
-    .search-button:hover {
-      background: linear-gradient(to right, #3a0ca3, #2c0a78);
-    }
-
-    /* Animación para el mensaje */
-    @keyframes fadeInOut {
-      0% { opacity: 0; transform: translateY(-20px); }
-      10% { opacity: 1; transform: translateY(0); }
-      90% { opacity: 1; transform: translateY(0); }
-      100% { opacity: 0; transform: translateY(-20px); }
-    }
-  </style>
+  <link rel="stylesheet" href="productos.css">
 </head>
 <body>
   <!-- Navbar -->
   <nav class="navbar">
-    <div class="navbar-brand">
-      <i class="fas fa-store"></i>
-      <span>Tienda Épica</span>
-    </div>
-    <a href="http://localhost:4200/carrito" class="cart-button">
-      <i class="fas fa-shopping-cart"></i>
-      <span>Carrito</span>
-    </a>
-  </nav>
-
-  <!-- Contenedor principal -->
-  <div style="padding: 20px; font-family: Arial, sans-serif; min-height: 100vh; background-color: #f5f5f5;">
-
-
-    <!-- Título -->
-    <h1 style="margin-bottom: 20px; text-align: center;">Productos</h1>
-
-    <!-- Buscador -->
-    <div class="search-container">
-      <div class="search-box">
-        <input type="text" class="search-input" placeholder="Buscar productos por nombre..." 
-               (input)="buscarProductos($event)">
-        <button class="search-button">
-          <i class="fas fa-search"></i>
-        </button>
+    <div class="nav-container">
+      <div class="navbar-brand">
+        <i class="fas fa-store"></i>
+        <span>Tienda Épica</span>
+      </div>
+      
+      <div class="navbar-menu">
+        <a href="#" class="nav-link active">Inicio</a>
+        <a href="#" class="nav-link">Categorías</a>
+        <a href="#" class="nav-link">Ofertas</a>
+        <a href="#" class="nav-link">Contacto</a>
+      </div>
+      
+      <div class="navbar-actions">
+        <div class="user-actions">
+          <button class="icon-btn">
+            <i class="fas fa-user"></i>
+          </button>
+          <button class="icon-btn">
+            <i class="fas fa-heart"></i>
+          </button>
+        </div>
+        <a href="http://localhost:4200/carrito" class="cart-button">
+          <i class="fas fa-shopping-cart"></i>
+          <span>Carrito</span>
+          <span class="cart-count">3</span>
+        </a>
       </div>
     </div>
+  </nav>
 
+  <!-- Hero Section -->
+  <section class="hero">
+    <div class="hero-content">
+      <h1 class="hero-title">Bienvenido a Tienda Épica</h1>
+      <p class="hero-subtitle">Descubre los mejores productos al mejor precio</p>
+      <button class="cta-button">Ver Ofertas</button>
+    </div>
+    <div class="hero-image">
+      <img src="https://via.placeholder.com/500x300/4361ee/ffffff?text=Tienda+Épica" alt="Tienda Épica">
+    </div>
+  </section>
+
+  <!-- Filtros y búsqueda -->
+  <section class="filters-section">
+    <div class="container">
+      <div class="search-container">
+        <div class="search-box">
+          <input type="text" class="search-input" placeholder="Buscar productos por nombre..." 
+                 (input)="buscarProductos($event)">
+          <button class="search-button">
+            <i class="fas fa-search"></i>
+          </button>
+        </div>
+      </div>
+      
+      <div class="filters-container">
+        <div class="filter-group">
+          <label for="category-filter">Categoría:</label>
+          <select id="category-filter" class="filter-select">
+            <option value="all">Todas las categorías</option>
+            <option value="electronics">Electrónicos</option>
+            <option value="clothing">Ropa</option>
+            <option value="home">Hogar</option>
+            <option value="sports">Deportes</option>
+          </select>
+        </div>
+        
+        <div class="filter-group">
+          <label for="price-filter">Precio:</label>
+          <select id="price-filter" class="filter-select">
+            <option value="all">Todos los precios</option>
+            <option value="low">Menos de $50</option>
+            <option value="medium">$50 - $100</option>
+            <option value="high">Más de $100</option>
+          </select>
+        </div>
+        
+        <div class="filter-group">
+          <label for="sort-filter">Ordenar por:</label>
+          <select id="sort-filter" class="filter-select">
+            <option value="featured">Destacados</option>
+            <option value="price-low">Precio: Menor a Mayor</option>
+            <option value="price-high">Precio: Mayor a Menor</option>
+            <option value="name">Nombre A-Z</option>
+          </select>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Contenedor principal -->
+  <main class="main-container">
     <!-- Mensaje flotante -->
-    <div *ngIf="mostrarMensaje" style="
-      position: fixed;
-      top: 70px;
-      right: 20px;
-      background-color: #4caf50;
-      color: white;
-      padding: 15px 25px;
-      border-radius: 8px;
-      box-shadow: 0 2px 10px rgba(0,0,0,0.2);
-      animation: fadeInOut 3s forwards;
-      z-index: 1000;
-    ">
+    <div *ngIf="mostrarMensaje" class="floating-message">
       {{ mensajeCarrito }}
     </div>
 
-    <!-- Contenedor de productos -->
-    <div style="display: flex; flex-wrap: wrap; gap: 20px; justify-content: center;">
-
-      <!-- Cambiado: de "productos" a "productosFiltrados" -->
-      <div *ngFor="let producto of productosFiltrados" style="
-        border: 1px solid #ddd;
-        border-radius: 10px;
-        width: 220px;
-        padding: 15px;
-        text-align: center;
-        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-        transition: transform 0.2s;
-      " 
-        (mouseenter)="hover = true" (mouseleave)="hover = false"
-        [style.transform]="hover ? 'scale(1.05)' : 'scale(1)'">
-
-        <h3>{{ producto.nombre }}</h3>
-        <p>{{ producto.descripcion }}</p>
-        <p><strong>Precio:</strong> ${{ producto.precio }}</p>
-        <p><strong>Stock:</strong> {{ producto.stock }}</p>
-
-        <button (click)="agregarAlCarrito(producto)" style="
-          background-color: #2196f3;
-          color: white;
-          border: none;
-          padding: 10px 15px;
-          border-radius: 5px;
-          cursor: pointer;
-          transition: background-color 0.2s;
-        " 
-        (mouseenter)="hoverBtn=true" (mouseleave)="hoverBtn=false"
-        [style.backgroundColor]="hoverBtn ? '#1976d2' : '#2196f3'">
-          Agregar al carrito
-        </button>
+    <!-- Sección de productos destacados (usando productosFiltrados) -->
+    <section class="featured-section">
+      <div class="container">
+        <h2 class="section-title">Productos Destacados</h2>
+        <div class="products-container">
+          <!-- Cambiado: usando productosFiltrados en lugar de productosDestacados -->
+          <div *ngFor="let producto of productosFiltrados.slice(0, 3)" class="product-card featured">
+            <div class="product-badge">Destacado</div>
+            <div class="product-image">
+              <img src="https://via.placeholder.com/200x150/3a0ca3/ffffff?text=Producto" alt="{{ producto.nombre }}">
+            </div>
+            <div class="product-info">
+              <h3 class="product-name">{{ producto.nombre }}</h3>
+              <p class="product-description">{{ producto.descripcion }}</p>
+              <div class="product-details">
+                <span class="product-price">${{ producto.precio }}</span>
+                <span class="product-stock">{{ producto.stock }} disponibles</span>
+              </div>
+              <button (click)="agregarAlCarrito(producto)" class="add-to-cart-btn">
+                <i class="fas fa-cart-plus"></i>
+                Agregar al carrito
+              </button>
+            </div>
+          </div>
+        </div>
       </div>
+    </section>
 
-    </div>
+    <!-- Sección de todos los productos -->
+    <section class="products-section">
+      <div class="container">
+        <h2 class="section-title">Todos los Productos</h2>
+        <div class="products-grid">
+          <!-- Manteniendo la funcionalidad original con productosFiltrados -->
+          <div *ngFor="let producto of productosFiltrados" class="product-card">
+            <div class="product-image">
+              <img src="https://via.placeholder.com/200x150/4361ee/ffffff?text=Producto" alt="{{ producto.nombre }}">
+            </div>
+            <div class="product-info">
+              <h3 class="product-name">{{ producto.nombre }}</h3>
+              <p class="product-description">{{ producto.descripcion }}</p>
+              <div class="product-details">
+                <span class="product-price">${{ producto.precio }}</span>
+                <span class="product-stock">{{ producto.stock }} disponibles</span>
+              </div>
+              <button (click)="agregarAlCarrito(producto)" class="add-to-cart-btn">
+                <i class="fas fa-cart-plus"></i>
+                Agregar al carrito
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
 
+    <!-- Sección de newsletter -->
+    <section class="newsletter-section">
+      <div class="container">
+        <div class="newsletter-content">
+          <h2>Suscríbete a nuestro newsletter</h2>
+          <p>Recibe las últimas ofertas y novedades directamente en tu correo</p>
+          <div class="newsletter-form">
+            <input type="email" placeholder="Tu correo electrónico">
+            <button class="subscribe-btn">Suscribirse</button>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- Footer -->
+  <footer class="footer">
+    <div class="container">
+      <div class="footer-content">
+        <div class="footer-section">
+          <h3>Tienda Épica</h3>
+          <p>Tu destino para los mejores productos al mejor precio. Calidad garantizada y servicio excepcional.</p>
+          <div class="social-links">
+            <a href="#"><i class="fab fa-facebook"></i></a>
+            <a href="#"><i class="fab fa-twitter"></i></a>
+            <a href="#"><i class="fab fa-instagram"></i></a>
+          </div>
+        </div>
+        
+        <div class="footer-section">
+          <h4>Enlaces Rápidos</h4>
+          <ul>
+            <li><a href="#">Inicio</a></li>
+            <li><a href="#">Productos</a></li>
+            <li><a href="#">Ofertas</a></li>
+            <li><a href="#">Contacto</a></li>
+          </ul>
+        </div>
+        
+        <div class="footer-section">
+          <h4>Categorías</h4>
+          <ul>
+            <li><a href="#">Electrónicos</a></li>
+            <li><a href="#">Ropa</a></li>
+            <li><a href="#">Hogar</a></li>
+            <li><a href="#">Deportes</a></li>
+          </ul>
+        </div>
+        <!-- Modal -->
+<div class="modal" [class.show]="mostrarModalMapa">
+  <div class="modal-content">
+    <span class="close" (click)="cerrarMapa()">&times;</span>
+    <app-mapa></app-mapa>
   </div>
+</div>
+
+        <div class="footer-section">
+          <h4>Contacto</h4>
+          <ul>
+            <div class="footer-section">
+  <button class="btn-mapas" (click)="abrirMapa()">
+    <i class="fas fa-map-marker-alt"></i> Sucursales Cerca
+  </button>
+</div>
+
+            <li><i class="fas fa-map-marker-alt"></i> Calle Principal 123</li>
+            <li><i class="fas fa-phone"></i> +1 234 567 890</li>
+            <li><i class="fas fa-envelope"></i> info@tiendaepica.com</li>
+          </ul>
+        </div>
+      </div>
+      
+      <div class="footer-bottom">
+        <p>&copy; 2023 Tienda Épica. Todos los derechos reservados.</p>
+      </div>
+    </div>
+  </footer>
 </body>
 </html>
