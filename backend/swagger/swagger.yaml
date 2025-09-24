@@ -1,17 +1,16 @@
 openapi: 3.0.0
 info:
-  title: API de Usuarios y Productos
+  title: API de Usuarios, Productos, Pagos y Configuraciones
   version: 1.0.0
 paths:
-  /usuarios:
+  /api/usuarios:
     get:
       summary: Lista todos los usuarios
       responses:
         '200':
           description: Lista de usuarios
-  /usuarios/nuevo:
     post:
-      summary: Crea un nuevo usuario
+      summary: Crear nuevo usuario (sin código)
       requestBody:
         required: true
         content:
@@ -19,37 +18,277 @@ paths:
             schema:
               type: object
               properties:
-                nombre:
-                  type: string
-                email:
-                  type: string
-                password:
-                  type: string
-                rol:
-                  type: string
+                nombre: { type: string }
+                email: { type: string }
+                password: { type: string }
+                rol: { type: string }
       responses:
         '201':
           description: Usuario creado
-  /productos:
+
+  /api/usuarios/send-code:
+    post:
+      summary: Enviar código de verificación
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                email: { type: string }
+      responses:
+        '200':
+          description: Código enviado
+
+  /api/usuarios/verify-code:
+    post:
+      summary: Verificar código y registrar usuario
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                nombre: { type: string }
+                email: { type: string }
+                password: { type: string }
+                rol: { type: string }
+                code: { type: string }
+      responses:
+        '201':
+          description: Usuario registrado con éxito
+
+  /api/usuarios/login:
+    post:
+      summary: Login de usuario
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                email: { type: string }
+                password: { type: string }
+      responses:
+        '200':
+          description: Login exitoso
+
+  /api/usuarios/recovery/send-code:
+    post:
+      summary: Enviar código de recuperación de contraseña
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                email: { type: string }
+      responses:
+        '200':
+          description: Código de recuperación enviado
+
+  /api/usuarios/recovery/verify-code:
+    post:
+      summary: Verificar código de recuperación
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                email: { type: string }
+                code: { type: string }
+      responses:
+        '200':
+          description: Código verificado
+
+  /api/usuarios/recovery/reset-password:
+    post:
+      summary: Resetear contraseña
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                email: { type: string }
+                newPassword: { type: string }
+      responses:
+        '200':
+          description: Contraseña actualizada
+
+  /api/usuarios/google-login:
+    post:
+      summary: Login con Google
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                token: { type: string }
+      responses:
+        '200':
+          description: Login exitoso con Google
+
+  /api/productos2:
     get:
       summary: Lista todos los productos
       responses:
         '200':
           description: Lista de productos
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
+    post:
+      summary: Crear un nuevo producto
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                nombre: { type: string }
+                descripcion: { type: string }
+                precio: { type: string }
+                stock: { type: integer }
+      responses:
+        '201':
+          description: Producto creado
+
+  /api/productos2/{id}:
+    delete:
+      summary: Eliminar producto por ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Producto eliminado
+
+  /api/pagos:
+    post:
+      summary: Crear PaymentIntent
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                usuarioId: { type: integer }
+                carrito:
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      nombre: { type: string }
+                      precio: { type: string }
+                      cantidad: { type: integer }
+      responses:
+        '200':
+          description: PaymentIntent creado
+
+  /api/pagos/confirmar:
+    post:
+      summary: Confirmar pago y enviar factura
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                usuario:
                   type: object
                   properties:
-                    id:
-                      type: integer
-                    nombre:
-                      type: string
-                    descripcion:
-                      type: string
-                    precio:
-                      type: string
-                    stock:
-                      type: integer
+                    id: { type: integer }
+                    nombre: { type: string }
+                    email: { type: string }
+                carrito:
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      nombre: { type: string }
+                      precio: { type: string }
+                      cantidad: { type: integer }
+                paymentIntentId: { type: string }
+      responses:
+        '200':
+          description: Pago confirmado y factura enviada
+
+  /api/configuraciones:
+    post:
+      summary: Crear configuración para un usuario
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                usuario_id: { type: integer }
+      responses:
+        '201':
+          description: Configuración creada
+
+  /api/configuraciones/{usuario_id}:
+    get:
+      summary: Obtener configuración por usuario
+      parameters:
+        - name: usuario_id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Configuración encontrada
+    put:
+      summary: Actualizar configuración de un usuario
+      parameters:
+        - name: usuario_id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                tema: { type: string }
+                notificaciones: { type: boolean }
+      responses:
+        '200':
+          description: Configuración actualizada
+    patch:
+      summary: Actualizar solo el tema
+      parameters:
+        - name: usuario_id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                tema: { type: string }
+      responses:
+        '200':
+          description: Tema actualizado
