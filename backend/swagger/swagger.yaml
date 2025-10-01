@@ -1,7 +1,7 @@
 openapi: 3.0.0
 info:
   title: API de Usuarios, Productos, Pagos y Configuraciones
-  version: 1.0.0
+  version: 1.0.1
 paths:
   /api/usuarios:
     get:
@@ -25,10 +25,24 @@ paths:
       responses:
         '201':
           description: Usuario creado
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  ok: { type: boolean }
+                  usuario:
+                    type: object
+                    properties:
+                      id: { type: integer }
+                      nombre: { type: string }
+                      email: { type: string }
+                      rol: { type: string }
+                  token: { type: string }
 
   /api/usuarios/send-code:
     post:
-      summary: Enviar código de verificación para registro
+      summary: Enviar código de verificación para registro (online/offline)
       requestBody:
         required: true
         content:
@@ -40,6 +54,14 @@ paths:
       responses:
         '200':
           description: Código enviado
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  ok: { type: boolean }
+                  offline: { type: boolean }
+                  message: { type: string }
 
   /api/usuarios/verify-code:
     post:
@@ -59,10 +81,24 @@ paths:
       responses:
         '201':
           description: Usuario registrado con éxito
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  ok: { type: boolean }
+                  usuario:
+                    type: object
+                    properties:
+                      id: { type: integer }
+                      nombre: { type: string }
+                      email: { type: string }
+                      rol: { type: string }
+                  token: { type: string }
 
   /api/usuarios/login/send-code:
     post:
-      summary: Paso 1 - Enviar código de login (requiere email y contraseña correctos)
+      summary: Paso 1 - Enviar código de login (modo online/offline)
       requestBody:
         required: true
         content:
@@ -74,7 +110,15 @@ paths:
                 password: { type: string }
       responses:
         '200':
-          description: Código de login enviado al correo
+          description: Código de login enviado
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  ok: { type: boolean }
+                  offline: { type: boolean }
+                  message: { type: string }
 
   /api/usuarios/login/verify-code:
     post:
@@ -91,6 +135,21 @@ paths:
       responses:
         '200':
           description: Login exitoso con token JWT
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  ok: { type: boolean }
+                  message: { type: string }
+                  usuario:
+                    type: object
+                    properties:
+                      id: { type: integer }
+                      nombre: { type: string }
+                      email: { type: string }
+                      rol: { type: string }
+                  token: { type: string }
 
   /api/usuarios/recovery/send-code:
     post:
@@ -106,6 +165,13 @@ paths:
       responses:
         '200':
           description: Código de recuperación enviado
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  ok: { type: boolean }
+                  message: { type: string }
 
   /api/usuarios/recovery/verify-code:
     post:
@@ -122,6 +188,13 @@ paths:
       responses:
         '200':
           description: Código verificado
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  ok: { type: boolean }
+                  message: { type: string }
 
   /api/usuarios/recovery/reset-password:
     post:
@@ -138,6 +211,21 @@ paths:
       responses:
         '200':
           description: Contraseña actualizada
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  ok: { type: boolean }
+                  message: { type: string }
+                  usuario:
+                    type: object
+                    properties:
+                      id: { type: integer }
+                      nombre: { type: string }
+                      email: { type: string }
+                      rol: { type: string }
+                  token: { type: string }
 
   /api/usuarios/google-login:
     post:
@@ -153,7 +241,22 @@ paths:
       responses:
         '200':
           description: Login exitoso con Google
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  ok: { type: boolean }
+                  usuario:
+                    type: object
+                    properties:
+                      id: { type: integer }
+                      nombre: { type: string }
+                      email: { type: string }
+                      rol: { type: string }
+                  token: { type: string }
 
+  # --- PRODUCTOS ---
   /api/productos2:
     get:
       summary: Lista todos los productos
@@ -190,6 +293,7 @@ paths:
         '200':
           description: Producto eliminado
 
+  # --- PAGOS ---
   /api/pagos:
     post:
       summary: Crear PaymentIntent
@@ -242,6 +346,7 @@ paths:
         '200':
           description: Pago confirmado y factura enviada
 
+  # --- CONFIGURACIONES ---
   /api/configuraciones:
     post:
       summary: Crear configuración para un usuario

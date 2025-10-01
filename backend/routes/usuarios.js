@@ -120,6 +120,10 @@ router.post('/', async (req, res) => {
 /**
  * 5A. Paso 1: Login (envía código si email/pass son correctos)
  */
+/**
+ * 5A. Paso 1: Login (envía código si email/pass son correctos)
+ * - Si no hay internet, entra en modo offline (muestra código en consola)
+ */
 router.post('/login/send-code', async (req, res) => {
   const { email, password } = req.body;
 
@@ -143,18 +147,31 @@ router.post('/login/send-code', async (req, res) => {
     const code = Math.floor(100000 + Math.random() * 900000).toString();
     verificationCodes.set(email, code);
 
-    await transporter.sendMail({
-      from: '"Sistema de Usuarios" <tu-correo@gmail.com>',
-      to: email,
-      subject: 'Código de inicio de sesión',
-      text: `Tu código de inicio de sesión es: ${code}`
-    });
+    try {
+      // Intentar enviar correo
+      await transporter.sendMail({
+        from: '"Sistema de Usuarios" <tu-correo@gmail.com>',
+        to: email,
+        subject: 'Código de inicio de sesión',
+        text: `Tu código de inicio de sesión es: ${code}`
+      });
 
-    res.json({ ok: true, message: 'Código enviado al correo' });
+      return res.json({ ok: true, message: 'Código enviado al correo' });
+    } catch (mailError) {
+      // 🚨 Si falla el envío (ej. no hay internet)
+      console.log(`⚠️ Modo OFFLINE: Código para ${email} es ${code}`);
+      return res.json({
+        ok: true,
+        offline: true,
+        message: 'Sin conexión a internet: el código se mostró en consola'
+      });
+    }
+
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
 });
+
 
 /**
  * 5B. Paso 2: Verificar código y completar login
