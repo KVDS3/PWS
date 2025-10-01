@@ -28,7 +28,7 @@ paths:
 
   /api/usuarios/send-code:
     post:
-      summary: Enviar código de verificación
+      summary: Enviar código de verificación para registro
       requestBody:
         required: true
         content:
@@ -60,9 +60,9 @@ paths:
         '201':
           description: Usuario registrado con éxito
 
-  /api/usuarios/login:
+  /api/usuarios/login/send-code:
     post:
-      summary: Login de usuario
+      summary: Paso 1 - Enviar código de login (requiere email y contraseña correctos)
       requestBody:
         required: true
         content:
@@ -74,7 +74,23 @@ paths:
                 password: { type: string }
       responses:
         '200':
-          description: Login exitoso
+          description: Código de login enviado al correo
+
+  /api/usuarios/login/verify-code:
+    post:
+      summary: Paso 2 - Verificar código y completar login
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                email: { type: string }
+                code: { type: string }
+      responses:
+        '200':
+          description: Login exitoso con token JWT
 
   /api/usuarios/recovery/send-code:
     post:

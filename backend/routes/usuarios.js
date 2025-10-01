@@ -2,9 +2,10 @@ const express = require('express');
 const router = express.Router();
 const pool = require('../db/connection');
 const nodemailer = require('nodemailer');
-const jwt = require('jsonwebtoken'); // <-- IMPORTANTE
+const jwt = require('jsonwebtoken'); 
 const { OAuth2Client } = require('google-auth-library');
 const client = new OAuth2Client('1023657360893-65p8bs4cd7jscntjspmfckb4hmnb8o6a.apps.googleusercontent.com'); 
+
 const verificationCodes = new Map();
 
 // Clave secreta para JWT (en producción usar variable de entorno)
@@ -20,7 +21,7 @@ const transporter = nodemailer.createTransport({
 });
 
 /**
- * 1. Enviar código de verificación al correo
+ * 1. Enviar código de verificación al correo (para registro)
  */
 router.post('/send-code', async (req, res) => {
   const { email } = req.body;
@@ -117,9 +118,9 @@ router.post('/', async (req, res) => {
 });
 
 /**
- * 5. Login de usuario
+ * 5A. Paso 1: Login (envía código si email/pass son correctos)
  */
-router.post('/login', async (req, res) => {
+router.post('/login/send-code', async (req, res) => {
   const { email, password } = req.body;
 
   try {
@@ -138,10 +139,53 @@ router.post('/login', async (req, res) => {
       return res.status(401).json({ error: 'Correo o contraseña incorrectos' });
     }
 
-    delete user.password;
+    // Generar código
+    const code = Math.floor(100000 + Math.random() * 900000).toString();
+    verificationCodes.set(email, code);
+
+    await transporter.sendMail({
+      from: '"Sistema de Usuarios" <tu-correo@gmail.com>',
+      to: email,
+      subject: 'Código de inicio de sesión',
+      text: `Tu código de inicio de sesión es: ${code}`
+    });
+
+    res.json({ ok: true, message: 'Código enviado al correo' });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+/**
+ * 5B. Paso 2: Verificar código y completar login
+ */
+router.post('/login/verify-code', async (req, res) => {
+  const { email, code } = req.body;
+
+  const storedCode = verificationCodes.get(email);
+  if (!storedCode || storedCode !== code) {
+    return res.status(400).json({ error: 'Código incorrecto o expirado' });
+  }
+
+  try {
+    const result = await pool.query(
+      'SELECT id, nombre, email, rol FROM usuarios WHERE email = $1',
+      [email]
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: 'Usuario no encontrado' });
+    }
+
+    const user = result.rows[0];
+    verificationCodes.delete(email);
 
     // Generar token JWT
-    const token = jwt.sign({ id: user.id, nombre: user.nombre, email: user.email }, JWT_SECRET, { expiresIn: '1h' });
+    const token = jwt.sign(
+      { id: user.id, nombre: user.nombre, email: user.email },
+      JWT_SECRET,
+      { expiresIn: '1h' }
+    );
 
     res.json({ ok: true, message: 'Login exitoso', usuario: user, token });
   } catch (err) {
