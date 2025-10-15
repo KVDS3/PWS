@@ -38,7 +38,7 @@ function generateToken(payload) {
   return token;
 }
 
-/** Middleware para validar token activo **/
+/** Middleware para autenticar y renovar token automáticamente */
 async function authMiddleware(req, res, next) {
   const authHeader = req.headers.authorization;
   if (!authHeader) return res.status(401).json({ error: 'Token requerido' });
@@ -46,20 +46,31 @@ async function authMiddleware(req, res, next) {
   const token = authHeader.split(' ')[1];
   try {
     const decoded = jwt.verify(token, JWT_SECRET);
-    const result = await pool.query('SELECT session_token FROM usuarios WHERE id = $1', [decoded.id]);
 
+    // Verifica sesión en DB
+    const result = await pool.query('SELECT session_token FROM usuarios WHERE id = $1', [decoded.id]);
     if (!result.rows[0] || result.rows[0].session_token !== token) {
       return res.status(401).json({ error: 'Sesión no válida o cerrada en otro dispositivo' });
     }
 
+    // Renovar token
+    const refreshedToken = jwt.sign(
+      { id: decoded.id, nombre: decoded.nombre, email: decoded.email },
+      JWT_SECRET,
+      { expiresIn: JWT_EXPIRES }
+    );
+    await pool.query('UPDATE usuarios SET session_token = $1 WHERE id = $2', [refreshedToken, decoded.id]);
+
+    res.setHeader('x-refreshed-token', refreshedToken);
+
     req.user = decoded;
     next();
   } catch (err) {
-    res.status(401).json({ error: 'Token inválido o expirado' });
+    return res.status(401).json({ error: 'Token inválido o expirado' });
   }
 }
 
-/** 1. Enviar código de verificación al correo **/
+/** 1. Enviar código de verificación al correo */
 router.post('/send-code', async (req, res) => {
   const { email } = req.body;
   if (!email) return res.status(400).json({ error: 'Correo requerido' });
@@ -80,7 +91,7 @@ router.post('/send-code', async (req, res) => {
   }
 });
 
-/** 2. Verificar código y registrar usuario **/
+/** 2. Verificar código y registrar usuario */
 router.post('/verify-code', async (req, res) => {
   const { nombre, email, password, rol, code } = req.body;
   const storedCode = verificationCodes.get(email);
@@ -106,7 +117,7 @@ router.post('/verify-code', async (req, res) => {
   }
 });
 
-/** 3. Listar usuarios **/
+/** 3. Listar usuarios (protegido) */
 router.get('/', async (req, res) => {
   try {
     const result = await pool.query('SELECT id, nombre, email, rol FROM usuarios');
@@ -116,37 +127,94 @@ router.get('/', async (req, res) => {
   }
 });
 
-/** 4. Crear usuario sin código **/
+/** 4. Crear usuario sin código (validaciones detalladas con mensajes personalizados) */
 router.post('/', async (req, res) => {
   const { nombre, email, password, rol } = req.body;
-  if (!nombre || !email || !password || !rol)
-    return res.status(400).json({ error: 'Todos los campos son obligatorios' });
+
+  // Validaciones específicas
+  if (!nombre) return res.status(400).json({ error: 'Nombre no proporcionado' });
+  if (!email) return res.status(400).json({ error: 'Correo no proporcionado' });
+  if (!password) return res.status(400).json({ error: 'Contraseña no proporcionada' });
+  if (!rol) return res.status(400).json({ error: 'Rol no proporcionado' });
+
+  // Validar nombre
+  if (typeof nombre !== 'string' || nombre.trim() === '') {
+    return res.status(400).json({ error: 'El nombre no puede estar vacío' });
+  }
+  if (nombre.length > 100) {
+    return res.status(400).json({ error: 'El nombre no puede superar los 100 caracteres' });
+  }
+  if (!/^[A-Za-zÁÉÍÓÚáéíóúÑñ\s]+$/.test(nombre)) {
+    return res.status(400).json({ error: 'El nombre solo puede contener letras y espacios' });
+  }
+
+  // Validar correo
+  if (!/^[\w.-]+@([\w-]+\.)+[A-Za-z]{2,}$/.test(email)) {
+    return res.status(400).json({ error: 'Formato de correo inválido' });
+  }
+  if (!email.endsWith('@gmail.com')) {
+    return res.status(400).json({ error: 'Solo se permiten correos de Gmail' });
+  }
+
+  // Validar contraseña
+  if (password.length < 8) {
+    return res.status(400).json({ error: 'La contraseña debe tener al menos 8 caracteres' });
+  }
+  if (!/[A-Z]/.test(password)) {
+    return res.status(400).json({ error: 'La contraseña debe tener al menos una letra mayúscula' });
+  }
+  if (!/[a-z]/.test(password)) {
+    return res.status(400).json({ error: 'La contraseña debe tener al menos una letra minúscula' });
+  }
+  if (!/[0-9]/.test(password)) {
+    return res.status(400).json({ error: 'La contraseña debe tener al menos un número' });
+  }
+  if (!/[!@#$%^&*(),.?":{}|<>]/.test(password)) {
+    return res.status(400).json({ error: 'La contraseña debe tener al menos un carácter especial' });
+  }
+
+  // Validar rol
+  const rolesPermitidos = ['admin', 'editor', 'lector'];
+  if (!rolesPermitidos.includes(rol)) {
+    return res.status(400).json({ error: 'Rol inválido. Solo se permiten admin, editor o lector' });
+  }
 
   try {
+    const existe = await pool.query('SELECT id FROM usuarios WHERE email = $1', [email]);
+    if (existe.rows.length > 0) {
+      return res.status(400).json({ error: 'El usuario ya existe' });
+    }
+
     const result = await pool.query(
       'INSERT INTO usuarios (nombre, email, password, rol) VALUES ($1, $2, $3, $4) RETURNING id, nombre, email, rol',
-      [nombre, email, password, rol]
+      [nombre.trim(), email.trim().toLowerCase(), password, rol]
     );
 
     const token = generateToken({ id: result.rows[0].id, nombre, email });
     await pool.query('UPDATE usuarios SET session_token = $1 WHERE id = $2', [token, result.rows[0].id]);
 
-    res.status(201).json({ ok: true, usuario: result.rows[0], token });
+    return res.status(201).json({ ok: true, usuario: result.rows[0], token });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error('❌ Error al crear usuario:', err.message);
+    return res.status(500).json({ error: 'Error interno del servidor', detail: err.message });
   }
 });
 
-/** 5A. Login: enviar código **/
+/** 5. Login con código */
 router.post('/login/send-code', async (req, res) => {
   const { email, password } = req.body;
 
   try {
-    const result = await pool.query('SELECT id, nombre, email, rol, password FROM usuarios WHERE email = $1', [email]);
-    if (result.rows.length === 0) return res.status(401).json({ error: 'Correo o contraseña incorrectos' });
+    const result = await pool.query(
+      'SELECT id, nombre, email, rol, password FROM usuarios WHERE email = $1',
+      [email]
+    );
+    if (result.rows.length === 0)
+      return res.status(401).json({ error: 'Correo o contraseña incorrectos' });
 
     const user = result.rows[0];
-    if (user.password !== password) return res.status(401).json({ error: 'Correo o contraseña incorrectos' });
+    if (user.password !== password)
+      return res.status(401).json({ error: 'Correo o contraseña incorrectos' });
 
     const code = Math.floor(100000 + Math.random() * 900000).toString();
     verificationCodes.set(email, code);
@@ -156,44 +224,55 @@ router.post('/login/send-code', async (req, res) => {
         from: `"Sistema de Usuarios" <${process.env.EMAIL_USER}>`,
         to: email,
         subject: 'Código de inicio de sesión',
-        text: `Tu código de inicio de sesión es: ${code}`
+        text: `Tu código de inicio de sesión es: ${code}`,
       });
+
       res.json({ ok: true, message: 'Código enviado al correo' });
     } catch {
       console.log(`⚠️ Modo OFFLINE: Código para ${email} es ${code}`);
-      res.json({ ok: true, offline: true, message: 'Sin conexión a internet: código mostrado en consola' });
+      res.json({
+        ok: true,
+        offline: true,
+        message: 'Sin conexión a internet: código mostrado en consola',
+        code,
+      });
     }
+
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
 });
 
-/** 5B. Verificar código y completar login con control de sesión **/
 router.post('/login/verify-code', async (req, res) => {
   const { email, code } = req.body;
   const storedCode = verificationCodes.get(email);
+
   if (!storedCode || storedCode !== code)
     return res.status(400).json({ error: 'Código incorrecto o expirado' });
 
   try {
-    const result = await pool.query('SELECT id, nombre, email, rol, session_token FROM usuarios WHERE email = $1', [email]);
+    const result = await pool.query(
+      'SELECT id, nombre, email, rol, session_token FROM usuarios WHERE email = $1',
+      [email]
+    );
+
     if (result.rows.length === 0)
       return res.status(404).json({ error: 'Usuario no encontrado' });
 
     const user = result.rows[0];
     verificationCodes.delete(email);
 
-    // Verificar si tiene sesión activa
     if (user.session_token) {
       try {
         jwt.verify(user.session_token, JWT_SECRET);
-        return res.status(403).json({ error: 'El usuario ya tiene una sesión activa en otro dispositivo.' });
+        return res.status(403).json({
+          error: 'El usuario ya tiene una sesión activa en otro dispositivo.'
+        });
       } catch {
-        console.log(`🔁 Token previo de ${email} expirado, permitiendo nuevo login.`);
+        console.log(`🔁 Token previo de ${email} expirado, generando uno nuevo.`);
       }
     }
 
-    // Generar nuevo token
     const token = generateToken({ id: user.id, nombre: user.nombre, email: user.email });
     await pool.query('UPDATE usuarios SET session_token = $1 WHERE id = $2', [token, user.id]);
 
@@ -203,7 +282,7 @@ router.post('/login/verify-code', async (req, res) => {
   }
 });
 
-/** 6. Logout: cerrar sesión **/
+/** 6. Logout */
 router.post('/logout', async (req, res) => {
   const { email } = req.body;
   try {
@@ -214,7 +293,7 @@ router.post('/logout', async (req, res) => {
   }
 });
 
-/** 7. Enviar código de recuperación **/
+/** 7. Recuperación de contraseña */
 router.post('/recovery/send-code', async (req, res) => {
   const { email } = req.body;
   if (!email) return res.status(400).json({ error: 'Correo requerido' });
@@ -235,7 +314,6 @@ router.post('/recovery/send-code', async (req, res) => {
   }
 });
 
-/** 8. Verificar código de recuperación **/
 router.post('/recovery/verify-code', (req, res) => {
   const { email, code } = req.body;
   const storedCode = verificationCodes.get(email);
@@ -245,7 +323,6 @@ router.post('/recovery/verify-code', (req, res) => {
   res.json({ ok: true, message: 'Código verificado' });
 });
 
-/** 9. Resetear contraseña **/
 router.post('/recovery/reset-password', async (req, res) => {
   const { email, newPassword } = req.body;
   try {
@@ -265,7 +342,7 @@ router.post('/recovery/reset-password', async (req, res) => {
   }
 });
 
-/** 10. Login con Google **/
+/** 10. Login con Google */
 router.post('/google-login', async (req, res) => {
   const { token } = req.body;
   try {
