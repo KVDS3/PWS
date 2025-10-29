@@ -1,8 +1,10 @@
 openapi: 3.0.0
 info:
-  title: API de Usuarios, Productos, Pagos y Configuraciones
-  version: 1.0.1
+  title: API de Usuarios, Productos, Movimientos, Proveedores, Clientes, Pagos y Configuraciones
+  version: 1.1.2
+
 paths:
+  # ------------------- USUARIOS -------------------
   /api/usuarios:
     get:
       summary: Lista todos los usuarios
@@ -10,7 +12,7 @@ paths:
         '200':
           description: Lista de usuarios
     post:
-      summary: Crear nuevo usuario (sin código)
+      summary: Crear nuevo usuario
       requestBody:
         required: true
         content:
@@ -42,7 +44,7 @@ paths:
 
   /api/usuarios/send-code:
     post:
-      summary: Enviar código de verificación para registro (online/offline)
+      summary: Enviar código de verificación
       requestBody:
         required: true
         content:
@@ -80,7 +82,7 @@ paths:
                 code: { type: string }
       responses:
         '201':
-          description: Usuario registrado con éxito
+          description: Usuario registrado
           content:
             application/json:
               schema:
@@ -98,7 +100,7 @@ paths:
 
   /api/usuarios/login/send-code:
     post:
-      summary: Paso 1 - Enviar código de login (modo online/offline)
+      summary: Paso 1 - Enviar código de login
       requestBody:
         required: true
         content:
@@ -122,7 +124,7 @@ paths:
 
   /api/usuarios/login/verify-code:
     post:
-      summary: Paso 2 - Verificar código y completar login
+      summary: Paso 2 - Verificar código de login
       requestBody:
         required: true
         content:
@@ -134,7 +136,7 @@ paths:
                 code: { type: string }
       responses:
         '200':
-          description: Login exitoso con token JWT
+          description: Login exitoso
           content:
             application/json:
               schema:
@@ -153,7 +155,7 @@ paths:
 
   /api/usuarios/recovery/send-code:
     post:
-      summary: Enviar código de recuperación de contraseña
+      summary: Enviar código de recuperación
       requestBody:
         required: true
         content:
@@ -164,7 +166,7 @@ paths:
                 email: { type: string }
       responses:
         '200':
-          description: Código de recuperación enviado
+          description: Código enviado
           content:
             application/json:
               schema:
@@ -240,7 +242,7 @@ paths:
                 token: { type: string }
       responses:
         '200':
-          description: Login exitoso con Google
+          description: Login exitoso
           content:
             application/json:
               schema:
@@ -256,15 +258,84 @@ paths:
                       rol: { type: string }
                   token: { type: string }
 
-  # --- PRODUCTOS ---
-  /api/productos2:
+  # ------------------- PRODUCTOS -------------------
+  /api/productos:
     get:
       summary: Lista todos los productos
       responses:
         '200':
           description: Lista de productos
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    id: { type: integer }
+                    codigo: { type: string }
+                    nombre: { type: string }
+                    descripcion: { type: string }
+                    categoria: { type: string }
+                    unidad: { type: string }
+                    stock_minimo: { type: integer }
+                    stock_actual: { type: integer }
+                    precio: { type: number }
+
     post:
-      summary: Crear un nuevo producto
+      summary: Crear un nuevo producto (registro con movimiento de entrada)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - nombre
+                - proveedor_id
+                - responsable_id
+              properties:
+                codigo: { type: string }
+                nombre: { type: string }
+                descripcion: { type: string }
+                categoria: { type: string }
+                unidad: { type: string }
+                stock_minimo: { type: integer }
+                stock_actual: { type: integer }
+                precio: { type: number }
+                proveedor_id: { type: integer, description: 'ID de proveedor válido existente' }
+                responsable_id: { type: integer, description: 'ID de usuario responsable que registra el producto' }
+      responses:
+        '201':
+          description: Producto creado y movimiento inicial registrado
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  ok: { type: boolean }
+                  producto:
+                    type: object
+                    properties:
+                      id: { type: integer }
+                      codigo: { type: string }
+                      nombre: { type: string }
+                      descripcion: { type: string }
+                      categoria: { type: string }
+                      unidad: { type: string }
+                      stock_minimo: { type: integer }
+                      stock_actual: { type: integer }
+                      precio: { type: number }
+
+  /api/productos/{id}:
+    put:
+      summary: Actualizar producto por ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
       requestBody:
         required: true
         content:
@@ -272,15 +343,18 @@ paths:
             schema:
               type: object
               properties:
+                codigo: { type: string }
                 nombre: { type: string }
                 descripcion: { type: string }
-                precio: { type: string }
-                stock: { type: integer }
+                categoria: { type: string }
+                unidad: { type: string }
+                stock_minimo: { type: integer }
+                stock_actual: { type: integer }
+                precio: { type: number }
       responses:
-        '201':
-          description: Producto creado
+        '200':
+          description: Producto actualizado
 
-  /api/productos2/{id}:
     delete:
       summary: Eliminar producto por ID
       parameters:
@@ -293,7 +367,89 @@ paths:
         '200':
           description: Producto eliminado
 
-  # --- PAGOS ---
+  /api/productos/alertas:
+    get:
+      summary: Lista productos con stock bajo
+      responses:
+        '200':
+          description: Lista de productos con alerta de stock bajo
+
+  # ------------------- MOVIMIENTOS -------------------
+  /api/movimientos:
+    get:
+      summary: Lista todos los movimientos
+      responses:
+        '200':
+          description: Lista de movimientos
+    post:
+      summary: Registrar entrada o salida de producto
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                tipo:
+                  type: string
+                  enum: [Entrada, Salida]
+                producto_id: { type: integer }
+                cantidad: { type: integer }
+                referencia: { type: string }
+                responsable_id: { type: integer }
+                proveedor_id: { type: integer }  # solo si tipo=Entrada
+                cliente_id: { type: integer }    # solo si tipo=Salida
+      responses:
+        '201':
+          description: Movimiento registrado y stock actualizado
+
+  # ------------------- PROVEEDORES -------------------
+  /api/proveedores:
+    get:
+      summary: Lista todos los proveedores
+      responses:
+        '200':
+          description: Lista de proveedores
+    post:
+      summary: Crear un proveedor
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                nombre: { type: string }
+                telefono: { type: string }
+                contacto: { type: string }
+      responses:
+        '201':
+          description: Proveedor creado
+
+  # ------------------- CLIENTES -------------------
+  /api/clientes:
+    get:
+      summary: Lista todos los clientes
+      responses:
+        '200':
+          description: Lista de clientes
+    post:
+      summary: Crear un cliente
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                nombre: { type: string }
+                telefono: { type: string }
+                contacto: { type: string }
+      responses:
+        '201':
+          description: Cliente creado
+
+  # ------------------- PAGOS -------------------
   /api/pagos:
     post:
       summary: Crear PaymentIntent
@@ -346,7 +502,7 @@ paths:
         '200':
           description: Pago confirmado y factura enviada
 
-  # --- CONFIGURACIONES ---
+  # ------------------- CONFIGURACIONES -------------------
   /api/configuraciones:
     post:
       summary: Crear configuración para un usuario
@@ -375,7 +531,7 @@ paths:
         '200':
           description: Configuración encontrada
     put:
-      summary: Actualizar configuración de un usuario
+      summary: Actualizar configuración completa de un usuario
       parameters:
         - name: usuario_id
           in: path

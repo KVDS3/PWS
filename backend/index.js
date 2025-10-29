@@ -9,6 +9,9 @@ const productos2Router = require('./routes/productos2'); // productos2
 const carritoRouter = require('./routes/carrito');
 const pagosRouter = require('./routes/pagos');
 const configuracionesRouter = require('./routes/configuraciones');
+const clientesRouter = require('./routes/clientes');
+const proveedoresRouter = require('./routes/proveedores');
+const movimientosRouter = require('./routes/movimientos');
 
 const app = express();
 const swaggerDocument = YAML.load('./swagger/swagger.yaml');
@@ -26,10 +29,13 @@ app.use('/docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
 
 // Rutas API unificadas
 app.use('/api/usuarios', usuariosRoutes);
-app.use('/api/productos2', productos2Router); // ruta separada para productos2
+app.use('/api/productos', productos2Router); // ruta separada para productos2
 app.use('/api/carrito', carritoRouter);
 app.use('/api/pagos', pagosRouter);
 app.use('/api/configuraciones', configuracionesRouter);
+app.use('/api/clientes', clientesRouter);
+app.use('/api/proveedores', proveedoresRouter);
+app.use('/api/movimientos', movimientosRouter);
 // Ruta raíz
 app.get('/', (req, res) => {
   res.send('API funcionando correctamente. Ve a /docs para la documentación Swagger.');
