@@ -39,6 +39,16 @@ export class UsuarioService {
   verifyCode(email: string, code: string): Observable<any> {
     return this.http.post<any>(`${this.apiUrl}/usuarios/verify-code`, { email, code });
   }
+// Enviar código para iniciar sesión
+// En tu UsuarioService
+loginSendCode(email: string, password: string): Observable<any> {
+  return this.http.post<any>(`${this.apiUrl}/usuarios/login/send-code`, { email, password });
+}
+
+// Verificar código para iniciar sesión
+verifyLoginCode(email: string, code: string): Observable<any> {
+  return this.http.post<any>(`${this.apiUrl}/usuarios/login/verify-code`, { email, code });
+}
 
   // Enviar código de recuperación
 sendRecoveryCode(email: string): Observable<any> {

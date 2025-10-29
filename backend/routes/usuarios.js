@@ -199,7 +199,68 @@ router.post('/', async (req, res) => {
     return res.status(500).json({ error: 'Error interno del servidor', detail: err.message });
   }
 });
+/** 5.1. Login directo (sin código) - NUEVO ENDPOINT */
+router.post('/login', async (req, res) => {
+  const { email, password } = req.body;
 
+  if (!email || !password) {
+    return res.status(400).json({ error: 'Correo y contraseña requeridos' });
+  }
+
+  try {
+    const result = await pool.query(
+      'SELECT id, nombre, email, rol, password, session_token FROM usuarios WHERE email = $1',
+      [email]
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(401).json({ error: 'Correo o contraseña incorrectos' });
+    }
+
+    const user = result.rows[0];
+
+    // Verificar contraseña (en producción usa bcrypt)
+    if (user.password !== password) {
+      return res.status(401).json({ error: 'Correo o contraseña incorrectos' });
+    }
+
+    // Verificar si ya tiene sesión activa
+    if (user.session_token) {
+      try {
+        jwt.verify(user.session_token, JWT_SECRET);
+        return res.status(403).json({
+          error: 'Ya tienes una sesión activa en otro dispositivo. Cierra sesión primero.'
+        });
+      } catch (tokenErr) {
+        // Token expirado, continuar con nuevo login
+        console.log(`🔁 Token expirado para ${email}, generando nuevo token`);
+      }
+    }
+
+    // Generar nuevo token
+    const token = generateToken({ id: user.id, nombre: user.nombre, email: user.email });
+    
+    // Actualizar token en base de datos
+    await pool.query('UPDATE usuarios SET session_token = $1 WHERE id = $2', [token, user.id]);
+
+    res.json({
+      ok: true,
+      message: 'Login exitoso',
+      usuario: {
+        id: user.id,
+        nombre: user.nombre,
+        email: user.email,
+        rol: user.rol
+      },
+      token
+    });
+
+  } catch (err) {
+    console.error('❌ Error en login:', err);
+    res.status(500).json({ error: 'Error interno del servidor', detail: err.message });
+  }
+});
+/** 5. Login con código */
 /** 5. Login con código */
 router.post('/login/send-code', async (req, res) => {
   const { email, password } = req.body;
@@ -243,6 +304,7 @@ router.post('/login/send-code', async (req, res) => {
   }
 });
 
+/** Verificar código para login */
 router.post('/login/verify-code', async (req, res) => {
   const { email, code } = req.body;
   const storedCode = verificationCodes.get(email);
@@ -262,6 +324,7 @@ router.post('/login/verify-code', async (req, res) => {
     const user = result.rows[0];
     verificationCodes.delete(email);
 
+    // Verificar si ya tiene sesión activa
     if (user.session_token) {
       try {
         jwt.verify(user.session_token, JWT_SECRET);
@@ -276,12 +339,22 @@ router.post('/login/verify-code', async (req, res) => {
     const token = generateToken({ id: user.id, nombre: user.nombre, email: user.email });
     await pool.query('UPDATE usuarios SET session_token = $1 WHERE id = $2', [token, user.id]);
 
-    res.json({ ok: true, message: 'Login exitoso', usuario: user, token });
+    res.json({ 
+      ok: true, 
+      message: 'Login exitoso', 
+      usuario: {
+        id: user.id,
+        nombre: user.nombre,
+        email: user.email,
+        rol: user.rol
+      }, 
+      token 
+    });
   } catch (err) {
+    console.error('❌ Error en login/verify-code:', err);
     res.status(500).json({ error: err.message });
   }
 });
-
 /** 6. Logout */
 router.post('/logout', async (req, res) => {
   const { email } = req.body;
@@ -342,38 +415,78 @@ router.post('/recovery/reset-password', async (req, res) => {
   }
 });
 
-/** 10. Login con Google */
+/** 10. Login con Google - MEJORADO */
 router.post('/google-login', async (req, res) => {
   const { token } = req.body;
+  
+  if (!token) {
+    return res.status(400).json({ error: 'Token de Google requerido' });
+  }
+
   try {
+    console.log('🔐 Verificando token de Google...');
+    
     const ticket = await client.verifyIdToken({
       idToken: token,
       audience: '1023657360893-65p8bs4cd7jscntjspmfckb4hmnb8o6a.apps.googleusercontent.com',
     });
 
     const payload = ticket.getPayload();
-    const email = payload.email;
-    const nombre = payload.name;
+    
+    if (!payload || !payload.email) {
+      return res.status(400).json({ error: 'Token de Google inválido' });
+    }
 
+    const email = payload.email;
+    const nombre = payload.name || payload.email.split('@')[0];
+
+    console.log(`📧 Usuario de Google: ${email}`);
+
+    // Verificar si el usuario existe
     let result = await pool.query('SELECT * FROM usuarios WHERE email = $1', [email]);
     let usuario;
 
     if (result.rows.length === 0) {
+      console.log(`👤 Creando nuevo usuario para: ${email}`);
+      // Crear nuevo usuario
       const insert = await pool.query(
         'INSERT INTO usuarios (nombre, email, password, rol) VALUES ($1, $2, $3, $4) RETURNING id, nombre, email, rol',
-        [nombre, email, '', 'lector']
+        [nombre, email, 'google_oauth', 'lector']
       );
       usuario = insert.rows[0];
     } else {
       usuario = result.rows[0];
     }
 
-    const jwtToken = generateToken({ id: usuario.id, nombre: usuario.nombre, email: usuario.email });
+    // Generar JWT token
+    const jwtToken = generateToken({ 
+      id: usuario.id, 
+      nombre: usuario.nombre, 
+      email: usuario.email 
+    });
+    
+    // Actualizar session_token en la base de datos
     await pool.query('UPDATE usuarios SET session_token = $1 WHERE id = $2', [jwtToken, usuario.id]);
 
-    res.json({ ok: true, usuario, token: jwtToken });
+    console.log(`✅ Login exitoso con Google para: ${email}`);
+
+    res.json({ 
+      ok: true, 
+      usuario: {
+        id: usuario.id,
+        nombre: usuario.nombre,
+        email: usuario.email,
+        rol: usuario.rol
+      }, 
+      token: jwtToken 
+    });
+
   } catch (err) {
-    res.status(400).json({ error: 'Token inválido', detail: err.message });
+    console.error('❌ Error en login con Google:', err.message);
+    res.status(400).json({ 
+      error: 'Token de Google inválido', 
+      detail: err.message 
+    });
   }
 });
 
