@@ -3,9 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Panel de Administración - Agregar Productos</title>
+  <title>Panel de Administración - Gestión de Productos</title>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-   
 </head>
 <body>
   <!-- Panel lateral -->
@@ -26,95 +25,236 @@
 
   <!-- Contenido principal -->
   <div class="admin-main">
-    <div class="admin-header" style="display:flex; justify-content: space-between; align-items:center;">
+    <div class="admin-header">
       <h1>Gestión de Productos</h1>
       <div class="user-info">
-        <img src="https://ui-avatars.com/api/?name=Admin+User&background=4361ee&color=fff" alt="Usuario" style="border-radius:50%; width:40px; height:40px;">
+        <img src="https://ui-avatars.com/api/?name=Admin+User&background=4361ee&color=fff" alt="Usuario">
         <span>Administrador</span>
       </div>
     </div>
 
-    <!-- Formulario para agregar productos -->
+    <!-- Alertas de stock bajo -->
+    <div *ngIf="alertasStock.length > 0" class="alertas-container">
+      <div class="alert alert-warning">
+        <i class="fas fa-exclamation-triangle"></i>
+        <strong>¡Atención!</strong> Tienes {{ alertasStock.length }} producto(s) con stock bajo
+        <button class="btn btn-sm btn-warning" (click)="mostrarDetalleAlertas = !mostrarDetalleAlertas">
+          <i class="fas" [class.fa-eye]="!mostrarDetalleAlertas" [class.fa-eye-slash]="mostrarDetalleAlertas"></i>
+          {{ mostrarDetalleAlertas ? 'Ocultar' : 'Ver' }}
+        </button>
+      </div>
+      
+      <div *ngIf="mostrarDetalleAlertas" class="alertas-detalle">
+        <table>
+          <thead>
+            <tr>
+              <th>Producto</th>
+              <th>Stock Actual</th>
+              <th>Stock Mínimo</th>
+              <th>Diferencia</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let alerta of alertasStock">
+              <td>{{ alerta.nombre }}</td>
+              <td class="text-center">{{ alerta.stock }}</td>
+              <td class="text-center">{{ alerta.stock_minimo }}</td>
+              <td class="text-center text-danger">
+                {{ (alerta.stock || 0) - (alerta.stock_minimo || 0) }}
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Formulario para agregar/editar productos -->
     <div class="product-form-container">
       <div class="form-header">
-        <h2>Agregar Nuevo Producto</h2>
-        <p>Completa la información del producto</p>
+        <h2>
+          <i class="fas" [class.fa-plus-circle]="!modoEdicion" [class.fa-edit]="modoEdicion"></i>
+          {{ modoEdicion ? 'Editar Producto' : 'Agregar Nuevo Producto' }}
+        </h2>
+        <p>{{ modoEdicion ? 'Modifica la información del producto' : 'Completa la información del producto' }}</p>
+        
+        <div *ngIf="modoEdicion && productoEditando" class="editando-info">
+          <small>Editando: {{ productoEditando.nombre }} (ID: {{ productoEditando.id }})</small>
+        </div>
       </div>
 
       <form [formGroup]="productoForm" (ngSubmit)="agregarProducto()" class="product-form">
-        <div class="form-group">
-          <label>Nombre del Producto</label>
-          <input type="text" placeholder="Ej: Laptop HP Pavilion" formControlName="nombre" required>
+        <div class="form-row">
+          <div class="form-group half">
+            <label for="nombre">Nombre del Producto <span class="required">*</span></label>
+            <input type="text" id="nombre" placeholder="Ej: Laptop HP Pavilion" formControlName="nombre" required>
+            <div *ngIf="nombre?.invalid && nombre?.touched" class="error-text">
+              El nombre es obligatorio
+            </div>
+          </div>
+
+          <div class="form-group half">
+            <label for="codigo">Código</label>
+            <input type="text" id="codigo" placeholder="Código interno" formControlName="codigo">
+          </div>
         </div>
 
         <div class="form-group">
-          <label>Descripción</label>
-          <textarea placeholder="Describe detalladamente el producto..." formControlName="descripcion"></textarea>
+          <label for="descripcion">Descripción</label>
+          <textarea id="descripcion" placeholder="Describe detalladamente el producto..." 
+                    formControlName="descripcion" rows="3"></textarea>
         </div>
 
-        <div class="form-group">
-          <label>Precio ($)</label>
-          <input type="number" step="0.01" min="0" placeholder="0.00" formControlName="precio" required>
+        <div class="form-row">
+          <div class="form-group third">
+            <label for="precio">Precio ($) <span class="required">*</span></label>
+            <input type="number" id="precio" step="0.01" min="0" placeholder="0.00" 
+                   formControlName="precio" required>
+            <div *ngIf="precio?.invalid && precio?.touched" class="error-text">
+              El precio debe ser mayor o igual a 0
+            </div>
+          </div>
+
+          <div class="form-group third">
+            <label for="stock">Stock <span class="required">*</span></label>
+            <input type="number" id="stock" min="0" placeholder="0" formControlName="stock" required>
+            <div *ngIf="stock?.invalid && stock?.touched" class="error-text">
+              El stock debe ser mayor o igual a 0
+            </div>
+          </div>
+
+          <div class="form-group third">
+            <label for="stock_minimo">Stock Mínimo</label>
+            <input type="number" id="stock_minimo" min="0" placeholder="0" formControlName="stock_minimo">
+            <div *ngIf="stock_minimo?.invalid && stock_minimo?.touched" class="error-text">
+              El stock mínimo debe ser mayor o igual a 0
+            </div>
+          </div>
         </div>
 
-        <div class="form-group">
-          <label>Stock</label>
-          <input type="number" min="0" placeholder="0" formControlName="stock">
+        <div class="form-row">
+          <div class="form-group half">
+            <label for="categoria">Categoría</label>
+            <select id="categoria" formControlName="categoria">
+              <option value="">Seleccionar categoría</option>
+              <option *ngFor="let cat of categorias" [value]="cat">{{ cat }}</option>
+            </select>
+          </div>
+
+          <div class="form-group half">
+            <label for="unidad">Unidad de Medida</label>
+            <select id="unidad" formControlName="unidad">
+              <option value="">Seleccionar unidad</option>
+              <option *ngFor="let uni of unidades" [value]="uni">{{ uni }}</option>
+            </select>
+          </div>
         </div>
 
-        <div class="form-actions" style="display:flex; gap:10px;">
-          <button type="reset" class="btn btn-warning">Limpiar</button>
-          <button type="submit" class="btn btn-success">Agregar Producto</button>
+        <div class="form-actions">
+          <button type="button" class="btn btn-secondary" (click)="limpiarFormulario()" *ngIf="modoEdicion">
+            <i class="fas fa-times"></i> Cancelar
+          </button>
+          <button type="button" class="btn btn-warning" (click)="limpiarFormulario()" *ngIf="!modoEdicion">
+            <i class="fas fa-broom"></i> Limpiar
+          </button>
+          <button type="submit" class="btn btn-success" [disabled]="productoForm.invalid">
+            <i class="fas" [class.fa-save]="modoEdicion" [class.fa-plus]="!modoEdicion"></i>
+            {{ modoEdicion ? 'Guardar Cambios' : 'Agregar Producto' }}
+          </button>
         </div>
       </form>
     </div>
 
     <!-- Lista de productos existentes -->
     <div class="products-list">
-      <h2>Productos Existentes</h2>
-      <table>
-        <thead>
-          <tr>
-            <th>Nombre</th>
-            <th>Descripción</th>
-            <th>Precio</th>
-            <th>Stock</th>
-            <th>Acciones</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr *ngFor="let producto of productos">
-            <td>{{ producto.nombre }}</td>
-            <td>{{ producto.descripcion }}</td>
-            <td>\${{ producto.precio }}</td>
-            <td>{{ producto.stock }}</td>
-            <td class="action-buttons">
-              <button class="btn btn-danger btn-sm" (click)="eliminarProducto(producto.id!)">
-                <i class="fas fa-trash"></i>
-              </button>
-            </td>
-          </tr>
-        </tbody>
-      </table>
+      <div class="list-header">
+        <h2>
+          <i class="fas fa-boxes"></i> Productos Existentes
+          <span class="badge">{{ productos.length }}</span>
+        </h2>
+        <div class="list-actions">
+          <button class="btn btn-primary btn-sm" (click)="obtenerProductos()">
+            <i class="fas fa-sync-alt"></i> Actualizar
+          </button>
+          <button class="btn btn-warning btn-sm" (click)="obtenerAlertasStock()">
+            <i class="fas fa-exclamation-triangle"></i> Ver Alertas
+          </button>
+        </div>
+      </div>
+
+      <div *ngIf="productos.length === 0" class="empty-state">
+        <i class="fas fa-box-open"></i>
+        <p>No hay productos registrados</p>
+      </div>
+
+      <div *ngIf="productos.length > 0">
+        <table>
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Código</th>
+              <th>Nombre</th>
+              <th>Categoría</th>
+              <th>Precio</th>
+              <th>Stock</th>
+              <th>Stock Mín.</th>
+              <th>Unidad</th>
+              <th>Acciones</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let producto of productos" [class.low-stock]="producto.stock && producto.stock_minimo && producto.stock < producto.stock_minimo">
+              <td class="text-center">{{ producto.id }}</td>
+              <td>{{ producto.codigo || '-' }}</td>
+              <td>{{ producto.nombre }}</td>
+              <td>{{ producto.categoria || '-' }}</td>
+              <td class="text-right">\${{ producto.precio | number:'1.2-2' }}</td>
+              <td class="text-center">
+                <span class="stock-badge" 
+                      [class.low]="producto.stock && producto.stock_minimo && producto.stock < producto.stock_minimo"
+                      [class.critical]="producto.stock && producto.stock_minimo && producto.stock < (producto.stock_minimo / 2)">
+                  {{ producto.stock || 0 }}
+                </span>
+              </td>
+              <td class="text-center">{{ producto.stock_minimo || 0 }}</td>
+              <td class="text-center">{{ producto.unidad || '-' }}</td>
+              <td class="action-buttons">
+                <button class="btn btn-info btn-sm" (click)="editarProducto(producto)" title="Editar">
+                  <i class="fas fa-edit"></i>
+                </button>
+                <button class="btn btn-danger btn-sm" (click)="eliminarProducto(producto.id!)" title="Eliminar">
+                  <i class="fas fa-trash"></i>
+                </button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+        
+        <div class="table-footer">
+          <p>Mostrando {{ productos.length }} producto(s)</p>
+          <p *ngIf="alertasStock.length > 0" class="text-warning">
+            <i class="fas fa-exclamation-circle"></i>
+            {{ alertasStock.length }} producto(s) con stock bajo
+          </p>
+        </div>
+      </div>
     </div>
   </div>
 
-  <!-- Modal de éxito -->
- <!-- Modal de éxito -->
-<div class="modal-backdrop" style="display: none;">
-  <div class="modal-content">
-    <div class="modal-header">
-      <i class="fas fa-check-circle"></i>
-      <h2>¡Producto Agregado!</h2>
-    </div>
-    <div class="modal-body">
-      <p>El producto se ha agregado correctamente al catálogo.</p>
-    </div>
-    <div class="modal-footer">
-      <button class="btn btn-primary" (click)="cerrarModal()">Aceptar</button>
+  <!-- Modal de mensaje -->
+  <div class="modal-backdrop" *ngIf="mostrarModal" (click)="cerrarModal()">
+    <div class="modal-content" (click)="$event.stopPropagation()">
+      <div class="modal-header" [class.success]="modalTitle === 'Éxito'" [class.error]="modalTitle === 'Error'">
+        <i class="fas" [class.fa-check-circle]="modalTitle === 'Éxito'" [class.fa-exclamation-circle]="modalTitle === 'Error'"></i>
+        <h2>{{ modalTitle }}</h2>
+      </div>
+      <div class="modal-body">
+        <p>{{ modalMessage }}</p>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-primary" (click)="cerrarModal()">Aceptar</button>
+      </div>
     </div>
   </div>
-</div>
 
 </body>
 </html>
