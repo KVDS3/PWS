@@ -14,9 +14,9 @@ export class CarritoComponent implements OnInit {
   carrito: any[] = [];
   total = 0;
   mostrarPago = false;
-
-  hoverDel = false;
-  hoverPay = false;
+  
+  // 🔹 Control de Pestañas
+  metodoPago: string = 'tarjeta'; // 'tarjeta' | 'efectivo'
 
   stripe!: Stripe | null;
   card!: StripeCardElement;
@@ -28,26 +28,6 @@ export class CarritoComponent implements OnInit {
     this.cargarCarrito();
     const usuarioData = localStorage.getItem('usuario');
     this.usuario = usuarioData ? JSON.parse(usuarioData) : null;
-  }
-
-  async iniciarPago() {
-    this.mostrarPago = true;
-
-    // Esperar renderizado
-    setTimeout(async () => {
-      if (!this.stripe) {
-        this.stripe = await loadStripe('pk_test_51SA1WWD0tdqvUIOsQwf2oKHPWze5AfkjZAFuMB22MN4E2semrutxCNV1jTaCnmmSWNWPcgfAaf1z6gv7wu5aerln00kualI6v4');
-      }
-
-      if (this.card) return; // ya inicializada
-
-      const cardDiv = document.getElementById('card-element');
-      if (!cardDiv) return;
-
-      const elements = this.stripe!.elements();
-      this.card = elements.create('card');
-      this.card.mount('#card-element');
-    }, 0);
   }
 
   cargarCarrito() {
@@ -77,21 +57,65 @@ export class CarritoComponent implements OnInit {
     this.calcularTotal(); 
   }
 
+  // 🔹 Inicio del proceso de pago
+  async iniciarPago() {
+    this.mostrarPago = true;
+    this.metodoPago = 'tarjeta'; // Default
+
+    // Cargar Stripe en segundo plano
+    setTimeout(async () => {
+      if (!this.stripe) {
+        this.stripe = await loadStripe('pk_test_51SA1WWD0tdqvUIOsQwf2oKHPWze5AfkjZAFuMB22MN4E2semrutxCNV1jTaCnmmSWNWPcgfAaf1z6gv7wu5aerln00kualI6v4');
+      }
+      this.montarTarjeta();
+    }, 0);
+  }
+
+  // 🔹 Montar elemento de tarjeta si la pestaña es tarjeta
+  montarTarjeta() {
+    if (this.metodoPago === 'tarjeta') {
+       // Pequeño timeout para asegurar que el DIV existe en el DOM
+       setTimeout(() => {
+         const cardDiv = document.getElementById('card-element');
+         if (cardDiv && this.stripe && !this.card) {
+           const elements = this.stripe.elements();
+           this.card = elements.create('card');
+           this.card.mount('#card-element');
+         }
+       }, 50);
+    }
+  }
+
+  // 🔹 Cambio de Pestaña
+  seleccionarMetodo(metodo: string) {
+    this.metodoPago = metodo;
+    if (metodo === 'tarjeta') {
+      this.montarTarjeta();
+    }
+  }
+
+  // 🔹 Función Principal de Procesamiento
   async procesarPago() {
     if (!this.carrito.length) return alert('Carrito vacío');
     if (!this.usuario) return alert('Debes iniciar sesión');
 
+    // --> RAMA EFECTIVO
+    if (this.metodoPago === 'efectivo') {
+      this.procesarPagoEfectivo();
+      return;
+    }
+
+    // --> RAMA TARJETA (Stripe)
     try {
-      // 1️⃣ Solicitar PaymentIntent al backend
+      // 1. Intent
       const res: any = await this.http.post('http://localhost:3000/api/pagos', {
         carrito: this.carrito,
         usuarioId: this.usuario.id
       }).toPromise();
 
       const clientSecret = res.clientSecret;
-      if (!clientSecret) return alert('Error al crear pago');
-
-      // 2️⃣ Confirmar pago con Stripe
+      
+      // 2. Confirmar en Stripe
       const { error, paymentIntent } = await this.stripe!.confirmCardPayment(clientSecret, {
         payment_method: {
           card: this.card,
@@ -102,22 +126,49 @@ export class CarritoComponent implements OnInit {
       if (error) return alert('❌ Pago fallido: ' + error.message);
 
       if (paymentIntent?.status === 'succeeded') {
-        // 3️⃣ Notificar al backend para generar factura
+        // 3. Confirmar en Backend (Resta stock y notifica)
         await this.http.post('http://localhost:3000/api/pagos/confirmar', {
           usuario: this.usuario,
           carrito: this.carrito,
           paymentIntentId: paymentIntent.id
         }).toPromise();
 
-        alert('✅ Pago realizado y factura enviada');
-        localStorage.removeItem('carrito');
-        this.cargarCarrito();
-        this.mostrarPago = false;
+        this.finalizarCompra('¡Pago con tarjeta exitoso! Factura enviada.');
       }
-
     } catch (err) {
       console.error(err);
-      alert('❌ Error procesando pago');
+      alert('❌ Error procesando pago con tarjeta');
+    }
+  }
+
+  // 🔹 Lógica específica de Efectivo
+  async procesarPagoEfectivo() {
+    if (!confirm('¿Confirmar orden en efectivo? Los productos se descontarán del stock inmediatamente.')) return;
+
+    try {
+      await this.http.post('http://localhost:3000/api/pagos/efectivo', {
+        usuario: this.usuario,
+        carrito: this.carrito
+      }).toPromise();
+
+      this.finalizarCompra('¡Orden generada! Revisa tu correo para instrucciones de pago.');
+    } catch (err) {
+      console.error(err);
+      alert('❌ Error al generar la orden en efectivo.');
+    }
+  }
+
+  finalizarCompra(mensaje: string) {
+    alert('✅ ' + mensaje);
+    localStorage.removeItem('carrito');
+    this.carrito = [];
+    this.total = 0;
+    this.mostrarPago = false;
+    this.metodoPago = 'tarjeta';
+    if(this.card) {
+      this.card.destroy(); // Limpiar tarjeta
+      // @ts-ignore
+      this.card = null;
     }
   }
 }

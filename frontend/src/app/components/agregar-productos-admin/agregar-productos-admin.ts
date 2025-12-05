@@ -22,7 +22,10 @@ export class AgregarProductosAdmin implements OnInit {
   modoEdicion = false;
   mostrarDetalleAlertas = false;
 
-  // Opciones para select
+  nombreUsuario: string = 'Usuario';
+  rolUsuario: string = '';
+  emailUsuario: string = '';
+
   categorias = ['Electrónica', 'Ropa', 'Alimentos', 'Hogar', 'Oficina', 'Otros'];
   unidades = ['Unidad', 'Kg', 'Litro', 'Paquete', 'Caja'];
 
@@ -32,9 +35,29 @@ export class AgregarProductosAdmin implements OnInit {
   ) {}
 
   ngOnInit(): void {
+    this.cargarDatosUsuario();
     this.inicializarFormulario();
     this.obtenerProductos();
     this.obtenerAlertasStock();
+  }
+
+  cargarDatosUsuario(): void {
+    const usuarioData = localStorage.getItem('usuario');
+    if (usuarioData) {
+      try {
+        const usuario = JSON.parse(usuarioData);
+        this.nombreUsuario = usuario.nombre || 'Administrador';
+        this.rolUsuario = usuario.rol || 'admin';
+        this.emailUsuario = usuario.email || '';
+      } catch (e) {
+        console.error('Error al leer datos del usuario', e);
+      }
+    }
+  }
+
+  get avatarUrl(): string {
+    const nombreParaUrl = encodeURIComponent(this.nombreUsuario);
+    return `https://ui-avatars.com/api/?name=${nombreParaUrl}&background=4361ee&color=fff`;
   }
 
   inicializarFormulario(): void {
@@ -73,6 +96,36 @@ export class AgregarProductosAdmin implements OnInit {
     });
   }
 
+  // 🔹 FUNCIÓN PARA GENERAR Y DESCARGAR EL REPORTE
+  generarReporte(): void {
+    this.productoService.descargarReporteExcel().subscribe({
+      next: (blob) => {
+        // Crear URL temporal
+        const url = window.URL.createObjectURL(blob);
+        // Crear elemento 'a' invisible
+        const a = document.createElement('a');
+        a.href = url;
+        // Nombre del archivo con fecha
+        const fecha = new Date().toISOString().slice(0, 10);
+        a.download = `Reporte_Inventario_${fecha}.xlsx`;
+        
+        // Simular clic
+        document.body.appendChild(a);
+        a.click();
+        
+        // Limpiar
+        document.body.removeChild(a);
+        window.URL.revokeObjectURL(url);
+        
+        this.mostrarModalMensaje('Reporte Generado', 'El archivo Excel se ha descargado correctamente.');
+      },
+      error: (err) => {
+        console.error(err);
+        this.mostrarModalMensaje('Error', 'No se pudo generar el reporte.');
+      }
+    });
+  }
+
   agregarProducto(): void {
     if (this.productoForm.valid) {
       if (this.modoEdicion && this.productoEditando) {
@@ -85,20 +138,16 @@ export class AgregarProductosAdmin implements OnInit {
 
   crearProducto(): void {
     const nuevoProducto: Producto = this.productoForm.value;
-
-    this.productoService.agregarProducto(nuevoProducto).subscribe({
+    this.productoService.agregarProducto(nuevoProducto, this.emailUsuario).subscribe({
       next: (response) => {
-        console.log('Respuesta del servidor:', response); // Para debug
         if (response.ok) {
           this.productos.unshift(response.producto);
           this.limpiarFormulario();
-          this.mostrarModalMensaje('Éxito', 'Producto agregado correctamente');
-          this.obtenerAlertasStock(); // Actualizar alertas
+          this.mostrarModalMensaje('Éxito', 'Producto agregado correctamente y notificación enviada.');
+          this.obtenerAlertasStock();
         }
       },
       error: (err) => {
-        console.error('Error completo al agregar producto:', err);
-        console.error('Error detallado:', err.error);
         this.mostrarModalMensaje('Error', err.error?.error || 'No se pudo agregar el producto');
       }
     });
@@ -112,19 +161,17 @@ export class AgregarProductosAdmin implements OnInit {
       id: this.productoEditando.id
     };
 
-    this.productoService.actualizarProducto(this.productoEditando.id, productoActualizado).subscribe({
+    this.productoService.actualizarProducto(this.productoEditando.id, productoActualizado, this.emailUsuario).subscribe({
       next: (producto) => {
         const index = this.productos.findIndex(p => p.id === producto.id);
         if (index !== -1) {
           this.productos[index] = producto;
         }
-        
         this.limpiarFormulario();
-        this.mostrarModalMensaje('Éxito', 'Producto actualizado correctamente');
-        this.obtenerAlertasStock(); // Actualizar alertas
+        this.mostrarModalMensaje('Éxito', 'Producto actualizado correctamente y notificación enviada.');
+        this.obtenerAlertasStock();
       },
       error: (err) => {
-        console.error('Error al actualizar producto', err);
         this.mostrarModalMensaje('Error', 'No se pudo actualizar el producto');
       }
     });
@@ -150,14 +197,13 @@ export class AgregarProductosAdmin implements OnInit {
 
   eliminarProducto(id: number): void {
     if (confirm('¿Estás seguro de eliminar este producto?')) {
-      this.productoService.eliminarProducto(id).subscribe({
+      this.productoService.eliminarProducto(id, this.emailUsuario).subscribe({
         next: () => {
           this.productos = this.productos.filter(p => p.id !== id);
           this.mostrarModalMensaje('Éxito', 'Producto eliminado correctamente');
-          this.obtenerAlertasStock(); // Actualizar alertas
+          this.obtenerAlertasStock();
         },
         error: (err) => {
-          console.error('Error al eliminar producto', err);
           this.mostrarModalMensaje('Error', 'No se pudo eliminar el producto');
         }
       });
@@ -191,7 +237,6 @@ export class AgregarProductosAdmin implements OnInit {
     this.modalMessage = '';
   }
 
-  // Getters para los controles del formulario
   get nombre() { return this.productoForm.get('nombre'); }
   get precio() { return this.productoForm.get('precio'); }
   get stock() { return this.productoForm.get('stock'); }

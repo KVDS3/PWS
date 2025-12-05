@@ -1,4 +1,3 @@
-// producto.service.ts
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
@@ -12,8 +11,9 @@ export class ProductoService {
 
   constructor(private http: HttpClient) {}
 
-  agregarProducto(producto: Producto): Observable<any> {
-    return this.http.post<any>(this.baseUrl, producto);
+  agregarProducto(producto: Producto, usuarioEmail?: string): Observable<any> {
+    const body = { ...producto, usuarioEmail };
+    return this.http.post<any>(this.baseUrl, body);
   }
 
   obtenerProductos(): Observable<Producto[]> {
@@ -24,11 +24,23 @@ export class ProductoService {
     return this.http.get<Producto[]>(`${this.baseUrl}/alertas`);
   }
 
-  eliminarProducto(id: number): Observable<any> {
-    return this.http.delete(`${this.baseUrl}/${id}`);
+  // 🔹 NUEVO MÉTODO PARA DESCARGAR EXCEL
+  // 'responseType: blob' es crucial para archivos binarios
+  descargarReporteExcel(): Observable<Blob> {
+    return this.http.get(`${this.baseUrl}/reporte-excel`, {
+      responseType: 'blob' 
+    });
   }
 
-  actualizarProducto(id: number, producto: Producto): Observable<Producto> {
-    return this.http.put<Producto>(`${this.baseUrl}/${id}`, producto);
+  eliminarProducto(id: number, usuarioEmail?: string): Observable<any> {
+    const url = usuarioEmail 
+      ? `${this.baseUrl}/${id}?usuarioEmail=${usuarioEmail}` 
+      : `${this.baseUrl}/${id}`;
+    return this.http.delete(url);
+  }
+
+  actualizarProducto(id: number, producto: Producto, usuarioEmail?: string): Observable<Producto> {
+    const body = { ...producto, usuarioEmail };
+    return this.http.put<Producto>(`${this.baseUrl}/${id}`, body);
   }
 }

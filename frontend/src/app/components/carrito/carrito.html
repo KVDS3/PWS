@@ -1,15 +1,10 @@
 <div class="carrito-wrapper">
-  <!-- Header del carrito -->
   <div class="carrito-header">
     <div class="container">
       <a href="/productos" class="back-button">
-        <i class="fas fa-arrow-left"></i>
-        Seguir comprando
+        <i class="fas fa-arrow-left"></i> Seguir comprando
       </a>
-      <h1 class="carrito-title">
-        <i class="fas fa-shopping-cart"></i>
-        Mi Carrito de Compras
-      </h1>
+      <h1 class="carrito-title"><i class="fas fa-shopping-cart"></i> Mi Carrito</h1>
       <div class="carrito-stats">
         <span class="items-count">{{carrito.length}} items</span>
         <span class="total-amount">Total: ${{total}}</span>
@@ -19,187 +14,101 @@
 
   <div class="container">
     <div class="carrito-layout">
-      <!-- Panel principal del carrito -->
       <div class="carrito-main">
         <div class="carrito-cuadro">
-          <!-- Carrito vacío -->
+          
           <div *ngIf="carrito.length===0" class="carrito-vacio">
-            <div class="empty-cart-icon">
-              <i class="fas fa-shopping-cart"></i>
-            </div>
+            <div class="empty-cart-icon"><i class="fas fa-shopping-cart"></i></div>
             <h2>Tu carrito está vacío</h2>
-            <p>¡Descubre nuestros increíbles productos y añade algunos a tu carrito!</p>
-            <a href="/productos" class="cta-button">
-              <i class="fas fa-store"></i>
-              Ir a la tienda
-            </a>
+            <a href="/productos" class="cta-button">Ir a la tienda</a>
           </div>
 
-          <!-- Items del carrito -->
-          <div *ngFor="let item of carrito; let i = index" class="carrito-item">
+          <div *ngFor="let item of carrito" class="carrito-item">
             <div class="item-image">
-              <img src="https://via.placeholder.com/80x80/4361ee/ffffff?text=P" alt="{{item.nombre}}">
+               <img src="https://via.placeholder.com/80" alt="Producto">
             </div>
-            
             <div class="item-info">
               <h3>{{item.nombre}}</h3>
-              <p class="item-description">{{item.descripcion}}</p>
-              <div class="item-details">
-                <span class="item-price">${{item.precio}} c/u</span>
-                <span class="item-stock">Disponible: {{item.stock}}</span>
-              </div>
+              <p>{{item.descripcion}}</p>
+              <span class="item-price">${{item.precio}} c/u</span>
             </div>
-
             <div class="item-controls">
               <div class="quantity-selector">
-                <!-- CORREGIDO: Cambiados los iconos por texto -->
-                <button class="qty-btn" (click)="disminuirCantidad(item)" 
-                        [disabled]="item.cantidad <= 1">
-                  -
-                </button>
-                <span class="quantity">{{item.cantidad}}</span>
-                <button class="qty-btn" (click)="aumentarCantidad(item)"
-                        [disabled]="item.cantidad >= item.stock">
-                  +
-                </button>
+                <button (click)="disminuirCantidad(item)" [disabled]="item.cantidad <= 1">-</button>
+                <span>{{item.cantidad}}</span>
+                <button (click)="aumentarCantidad(item)" [disabled]="item.cantidad >= item.stock">+</button>
               </div>
-              <div class="item-subtotal">
-                ${{item.precio * item.cantidad}}
-              </div>
+              <div class="item-subtotal">${{item.precio * item.cantidad}}</div>
             </div>
-
-            <button class="eliminar-btn" (click)="eliminarProducto(item)">
-              <i class="fas fa-trash"></i>
-              Eliminar
-            </button>
-          </div>
-
-          <!-- Resumen del pedido -->
-          <div *ngIf="carrito.length>0" class="order-summary">
-            <div class="summary-row">
-              <span>Subtotal</span>
-              <span>${{total}}</span>
-            </div>
-            <div class="summary-row">
-              <span>Envío</span>
-              <span class="free-shipping">Gratis</span>
-            </div>
-            <div class="summary-row discount">
-              <span>Descuento</span>
-              <span>-${{total * 0.1 | number:'1.2-2'}}</span>
-            </div>
-            <div class="summary-row total">
-              <span>Total final</span>
-              <span>${{total * 0.9 | number:'1.2-2'}}</span>
-            </div>
+            <button class="eliminar-btn" (click)="eliminarProducto(item)"><i class="fas fa-trash"></i></button>
           </div>
         </div>
 
-        <!-- Formulario de pago -->
         <div *ngIf="mostrarPago" class="form-pago-container">
           <div class="form-pago">
             <div class="payment-header">
               <h2><i class="fas fa-credit-card"></i> Finalizar Compra</h2>
-              <p>Complete los datos de pago para confirmar su pedido</p>
+              <p>Selecciona tu método de pago</p>
             </div>
             
             <div class="payment-methods">
               <div class="method-tabs">
-                <button class="method-tab active">Tarjeta de Crédito</button>
-              
+                <button class="method-tab" 
+                        [class.active]="metodoPago === 'tarjeta'" 
+                        (click)="seleccionarMetodo('tarjeta')">
+                  <i class="fas fa-credit-card"></i> Tarjeta
+                </button>
+                <button class="method-tab" 
+                        [class.active]="metodoPago === 'efectivo'" 
+                        (click)="seleccionarMetodo('efectivo')">
+                  <i class="fas fa-money-bill-wave"></i> Efectivo
+                </button>
               </div>
               
-              <div class="card-form">
+              <div class="card-form" [style.display]="metodoPago === 'tarjeta' ? 'block' : 'none'">
                 <div class="form-group">
-                  <label for="card-number">Número de tarjeta</label>
-                  <div class="input-with-icon">
-                    <i class="fas fa-credit-card"></i>
-                    <input type="text" id="card-number" placeholder="1234 5678 9012 3456">
-                  </div>
+                  <label>Datos de la tarjeta (Stripe)</label>
+                  <div id="card-element" class="stripe-box"></div>
                 </div>
-                
-                <div class="form-row">
-                  <div class="form-group">
-                    <label for="card-expiry">Fecha de expiración</label>
-                    <input type="text" id="card-expiry" placeholder="MM/AA">
-                  </div>
-                  <div class="form-group">
-                    <label for="card-cvc">CVC</label>
-                    <input type="text" id="card-cvc" placeholder="123">
-                  </div>
-                </div>
-                
                 <div class="form-group">
-                  <label for="card-name">Nombre en la tarjeta</label>
-                  <input type="text" id="card-name" placeholder="Juan Pérez">
+                  <label>Nombre del titular</label>
+                  <input type="text" placeholder="Nombre completo">
                 </div>
+              </div>
+
+              <div class="cash-info" *ngIf="metodoPago === 'efectivo'">
+                 <div class="alert-cash">
+                   <i class="fas fa-info-circle"></i>
+                   <div>
+                     <strong>Pago contra entrega / Sucursal</strong>
+                     <p>Al confirmar, se generará tu orden y <b>se descontarán los productos del inventario</b> inmediatamente para reservarlos.</p>
+                   </div>
+                 </div>
               </div>
             </div>
             
             <div class="payment-actions">
               <button class="confirm-btn" (click)="procesarPago()">
-                <i class="fas fa-lock"></i>
-                Pagar ${{total * 0.9 | number:'1.2-2'}}
+                <i class="fas" [class.fa-lock]="metodoPago==='tarjeta'" [class.fa-check]="metodoPago==='efectivo'"></i>
+                {{ metodoPago === 'tarjeta' ? 'Pagar Ahora' : 'Confirmar Orden' }} 
+                ${{total * 0.9 | number:'1.2-2'}}
               </button>
-              <button class="cancel-btn" (click)="mostrarPago=false">
-                <i class="fas fa-times"></i>
-                Cancelar
-              </button>
+              <button class="cancel-btn" (click)="mostrarPago=false">Cancelar</button>
             </div>
           </div>
         </div>
+
       </div>
 
-      <!-- Sidebar de resumen -->
       <div *ngIf="carrito.length>0 && !mostrarPago" class="carrito-sidebar">
         <div class="sidebar-card">
-          <h3>Resumen del Pedido</h3>
-          
-          <div class="sidebar-items">
-            <div *ngFor="let item of carrito" class="sidebar-item">
-              <span class="item-name">{{item.nombre}}</span>
-              <span class="item-total">${{item.precio * item.cantidad}}</span>
-            </div>
-          </div>
-          
+          <h3>Resumen</h3>
           <div class="sidebar-total">
-            <div class="total-line">
-              <span>Subtotal:</span>
-              <span>${{total}}</span>
-            </div>
-            <div class="total-line discount">
-              <span>Descuento:</span>
-              <span>-${{total * 0.1 | number:'1.2-2'}}</span>
-            </div>
-            <div class="total-line final">
-              <span>Total:</span>
-              <span>${{total * 0.9 | number:'1.2-2'}}</span>
-            </div>
+            <div class="total-line"><span>Subtotal:</span> <span>${{total}}</span></div>
+            <div class="total-line discount"><span>Descuento:</span> <span>-${{total * 0.1 | number:'1.2-2'}}</span></div>
+            <div class="total-line final"><span>Total:</span> <span>${{total * 0.9 | number:'1.2-2'}}</span></div>
           </div>
-          
-          <button class="pagar-btn" (click)="iniciarPago()">
-            <i class="fas fa-shield-alt"></i>
-            Proceder al Pago
-          </button>
-          
-          <div class="security-badges">
-            <div class="badge">
-              <i class="fas fa-lock"></i>
-              <span>Pago seguro</span>
-            </div>
-            <div class="badge">
-              <i class="fas fa-truck"></i>
-              <span>Envío gratis</span>
-            </div>
-          </div>
-        </div>
-        
-        <div class="promo-card">
-          <h4>¿Tienes un código de descuento?</h4>
-          <div class="promo-input">
-            <input type="text" placeholder="Ingresa tu código">
-            <button class="apply-btn">Aplicar</button>
-          </div>
+          <button class="pagar-btn" (click)="iniciarPago()">Proceder al Pago</button>
         </div>
       </div>
     </div>

@@ -1,5 +1,6 @@
 {
   "dependencies": {
+    "exceljs": "^4.4.0",
     "pdfkit": "^0.17.2",
     "stripe": "^18.5.0"
   }

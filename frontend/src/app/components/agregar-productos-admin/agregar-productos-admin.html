@@ -7,7 +7,6 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 <body>
-  <!-- Panel lateral -->
   <div class="admin-sidebar">
     <div class="logo">
       <h2>Panel Admin</h2>
@@ -23,17 +22,16 @@
     </ul>
   </div>
 
-  <!-- Contenido principal -->
   <div class="admin-main">
     <div class="admin-header">
       <h1>Gestión de Productos</h1>
+      
       <div class="user-info">
-        <img src="https://ui-avatars.com/api/?name=Admin+User&background=4361ee&color=fff" alt="Usuario">
-        <span>Administrador</span>
+        <img [src]="avatarUrl" alt="Usuario">
+        <span>{{ nombreUsuario }}</span>
       </div>
-    </div>
+      </div>
 
-    <!-- Alertas de stock bajo -->
     <div *ngIf="alertasStock.length > 0" class="alertas-container">
       <div class="alert alert-warning">
         <i class="fas fa-exclamation-triangle"></i>
@@ -68,7 +66,6 @@
       </div>
     </div>
 
-    <!-- Formulario para agregar/editar productos -->
     <div class="product-form-container">
       <div class="form-header">
         <h2>
@@ -164,14 +161,18 @@
       </form>
     </div>
 
-    <!-- Lista de productos existentes -->
     <div class="products-list">
       <div class="list-header">
         <h2>
           <i class="fas fa-boxes"></i> Productos Existentes
           <span class="badge">{{ productos.length }}</span>
         </h2>
+        
         <div class="list-actions">
+          <button class="btn btn-success btn-sm" (click)="generarReporte()" style="margin-right: 8px;">
+            <i class="fas fa-file-excel"></i> Reporte Excel
+          </button>
+
           <button class="btn btn-primary btn-sm" (click)="obtenerProductos()">
             <i class="fas fa-sync-alt"></i> Actualizar
           </button>
@@ -207,7 +208,7 @@
               <td>{{ producto.codigo || '-' }}</td>
               <td>{{ producto.nombre }}</td>
               <td>{{ producto.categoria || '-' }}</td>
-              <td class="text-right">\${{ producto.precio | number:'1.2-2' }}</td>
+              <td class="text-right">${{ producto.precio | number:'1.2-2' }}</td>
               <td class="text-center">
                 <span class="stock-badge" 
                       [class.low]="producto.stock && producto.stock_minimo && producto.stock < producto.stock_minimo"
@@ -240,7 +241,6 @@
     </div>
   </div>
 
-  <!-- Modal de mensaje -->
   <div class="modal-backdrop" *ngIf="mostrarModal" (click)="cerrarModal()">
     <div class="modal-content" (click)="$event.stopPropagation()">
       <div class="modal-header" [class.success]="modalTitle === 'Éxito'" [class.error]="modalTitle === 'Error'">

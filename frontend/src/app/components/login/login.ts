@@ -207,34 +207,34 @@ export class Login implements OnInit, OnDestroy, AfterViewInit {
     setTimeout(() => this.cdRef.detectChanges(), 0);
   }
   
-onSubmit(): void {
-  if (!this.email || !this.password) {
-    this.error = 'Debes ingresar correo y contraseña';
-    return;
-  }
-
-  this.isLoading = true;
-  this.error = '';
-
-  const sub = this.usuarioService.loginSendCode(this.email, this.password).subscribe({
-    next: (res) => {
-      this.isLoading = false;
-      if (res?.ok) {
-        this.successMessage = res.message;
-        this.selectTab('verify'); // Mostrar pantalla para ingresar el código
-        this.startCountdown(); // Inicia el contador de reenvío
-      } else {
-        this.error = res.error || 'Error enviando código';
-      }
-    },
-    error: (err) => {
-      this.isLoading = false;
-      this.error = err.error?.error || 'Error al iniciar sesión';
+  onSubmit(): void {
+    if (!this.email || !this.password) {
+      this.error = 'Debes ingresar correo y contraseña';
+      return;
     }
-  });
 
-  this.subscriptions.add(sub);
-}
+    this.isLoading = true;
+    this.error = '';
+
+    const sub = this.usuarioService.loginSendCode(this.email, this.password).subscribe({
+      next: (res) => {
+        this.isLoading = false;
+        if (res?.ok) {
+          this.successMessage = res.message;
+          this.selectTab('verify'); // Mostrar pantalla para ingresar el código
+          this.startCountdown(); // Inicia el contador de reenvío
+        } else {
+          this.error = res.error || 'Error enviando código';
+        }
+      },
+      error: (err) => {
+        this.isLoading = false;
+        this.error = err.error?.error || 'Error al iniciar sesión';
+      }
+    });
+
+    this.subscriptions.add(sub);
+  }
 
 
   // Registro
@@ -311,82 +311,83 @@ onSubmit(): void {
   }
 
   onVerifyCode(): void {
-  if (!this.verificationCode) {
-    this.error = 'Debes ingresar el código';
-    return;
-  }
+    if (!this.verificationCode) {
+      this.error = 'Debes ingresar el código';
+      return;
+    }
 
-  if (this.verificationCode.length !== 6) {
-    this.error = 'El código debe tener 6 dígitos';
-    return;
-  }
+    if (this.verificationCode.length !== 6) {
+      this.error = 'El código debe tener 6 dígitos';
+      return;
+    }
 
-  this.isVerifyingCode = true;
-  this.error = '';
+    this.isVerifyingCode = true;
+    this.error = '';
 
-  // Para REGISTRO: verificar código y crear usuario
-  if (this.selectedTab === 'verify' && this.nuevoUsuario.email) {
-    const usuario: Usuario = {
-      nombre: this.nuevoUsuario.nombre,
-      email: this.nuevoUsuario.email,
-      password: this.nuevoUsuario.password,
-      rol: 'lector'
-    };
+    // Para REGISTRO: verificar código y crear usuario
+    if (this.selectedTab === 'verify' && this.nuevoUsuario.email) {
+      const usuario: Usuario = {
+        nombre: this.nuevoUsuario.nombre,
+        email: this.nuevoUsuario.email,
+        password: this.nuevoUsuario.password,
+        rol: 'lector'
+      };
 
-    const sub = this.usuarioService.verifyAndRegister({ ...usuario, code: this.verificationCode }).subscribe({
-      next: (res) => {
-        this.isVerifyingCode = false;
-        if (res?.ok) {
-          this.successMessage = '¡Tu cuenta fue creada correctamente!';
-          this.showSuccessModal = true;
-          
-          // Limpiar formulario
-          this.nuevoUsuario = { nombre: '', email: '', password: '' };
-          this.confirmPassword = '';
-          this.verificationCode = '';
-        } else {
-          this.error = 'Error creando la cuenta';
+      const sub = this.usuarioService.verifyAndRegister({ ...usuario, code: this.verificationCode }).subscribe({
+        next: (res) => {
+          this.isVerifyingCode = false;
+          if (res?.ok) {
+            this.successMessage = '¡Tu cuenta fue creada correctamente!';
+            this.showSuccessModal = true;
+            
+            // Limpiar formulario
+            this.nuevoUsuario = { nombre: '', email: '', password: '' };
+            this.confirmPassword = '';
+            this.verificationCode = '';
+          } else {
+            this.error = 'Error creando la cuenta';
+          }
+        },
+        error: (err) => {
+          this.isVerifyingCode = false;
+          this.error = err.error?.error || 'Error verificando código';
+          console.error('Error verificando código:', err);
         }
-      },
-      error: (err) => {
-        this.isVerifyingCode = false;
-        this.error = err.error?.error || 'Error verificando código';
-        console.error('Error verificando código:', err);
-      }
-    });
+      });
 
-    this.subscriptions.add(sub);
-  } 
-  // Para LOGIN: solo verificar código
-  else if (this.selectedTab === 'verify' && this.email) {
-    const sub = this.usuarioService.verifyLoginCode(this.email, this.verificationCode).subscribe({
-      next: (res) => {
-        this.isVerifyingCode = false;
-        if (res?.ok && res.usuario) {
-          localStorage.setItem('usuario', JSON.stringify(res.usuario));
-          localStorage.setItem('token', res.token);
-          
-          // Crear configuración si no existe
-          this.configuracionService.crearConfiguracion(res.usuario.id).subscribe({
-            next: () => console.log('Configuración creada/obtenida'),
-            error: (err) => console.error('Error creando configuración', err)
-          });
+      this.subscriptions.add(sub);
+    } 
+    // Para LOGIN: solo verificar código
+    else if (this.selectedTab === 'verify' && this.email) {
+      const sub = this.usuarioService.verifyLoginCode(this.email, this.verificationCode).subscribe({
+        next: (res) => {
+          this.isVerifyingCode = false;
+          if (res?.ok && res.usuario) {
+            localStorage.setItem('usuario', JSON.stringify(res.usuario));
+            localStorage.setItem('token', res.token);
+            
+            // Crear configuración si no existe
+            this.configuracionService.crearConfiguracion(res.usuario.id).subscribe({
+              next: () => console.log('Configuración creada/obtenida'),
+              error: (err) => console.error('Error creando configuración', err)
+            });
 
-          this.redirigirPorRol(res.usuario);
-        } else {
-          this.error = 'Error verificando código de acceso';
+            this.redirigirPorRol(res.usuario);
+          } else {
+            this.error = 'Error verificando código de acceso';
+          }
+        },
+        error: (err) => {
+          this.isVerifyingCode = false;
+          this.error = err.error?.error || 'Error verificando código';
+          console.error('Error verificando código de login:', err);
         }
-      },
-      error: (err) => {
-        this.isVerifyingCode = false;
-        this.error = err.error?.error || 'Error verificando código';
-        console.error('Error verificando código de login:', err);
-      }
-    });
+      });
 
-    this.subscriptions.add(sub);
+      this.subscriptions.add(sub);
+    }
   }
-}
+
   // Recuperación de contraseña
   onRecovery(): void {
     if (!this.recoveryEmail) {
@@ -563,13 +564,17 @@ onSubmit(): void {
     return emailRegex.test(email);
   }
 
-  // Función auxiliar para redirigir según rol
+  // --- FUNCIÓN PRINCIPAL DE REDIRECCIÓN ACTUALIZADA ---
   private redirigirPorRol(usuario: any) {
-    if (usuario.rol === 'admin') {
-      this.router.navigateByUrl('/agregarProducto');
-    } else {
-      this.router.navigateByUrl('/productos');
-    }
+    console.log('Evaluando rol para redirección:', usuario.rol);
+
+    // Determinar la ruta
+    const rutaDestino = usuario.rol === 'editor' ? '/agregarProducto' : '/productos';
+
+    // Ejecutar la navegación dentro de NgZone
+    this.ngZone.run(() => {
+      this.router.navigateByUrl(rutaDestino);
+    });
   }
 
   // Limpiar errores cuando el usuario empiece a escribir
